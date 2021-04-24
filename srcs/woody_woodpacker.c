@@ -28,6 +28,9 @@ static int dump_obj(void *obj, size_t size)
 
 static void handle_obj(void *obj, size_t size)
 {
+	void *obj_cpy;
+	void *text_content;
+	size_t text_size;
 	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)obj;
 	int shnum = ehdr->e_shnum;
 	Elf64_Shdr *shdr = (Elf64_Shdr *)(obj + ehdr->e_shoff);
@@ -35,10 +38,37 @@ static void handle_obj(void *obj, size_t size)
 	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
 	
 	for (int i = 0; i < shnum; ++i) {
-    	printf("%2d: %4d '%s'\n", i, shdr[i].sh_name, sh_strtab_p + shdr[i].sh_name);
+		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
+		{
+			text_size = shdr[i].sh_size;
+			printf("text size = %ld\n", text_size);
+			if ((text_content = malloc(text_size)) == NULL)
+			{
+				printf("Error copying text section.\n");
+				return ;
+			}
+			ft_bzero(text_content, text_size);
+			ft_memcpy(text_content, obj + shdr[i].sh_offset, text_size);
+			for (size_t j = 0; j < text_size; ++j)
+			{
+				if (j % 16 == 0)
+					printf("\n %04lx - ", j);
+				printf("%02x", ((unsigned char *)text_content)[j]);
+				if ((j + 1) % 4 == 0)
+					printf(" ");
+			}
+			free(text_content);
+		}
   	}
+	if ((obj_cpy = malloc(size)) == NULL)
+	{
+		printf("Error: can't duplicate file...");
+		return ;
+	}
+	ft_memcpy(obj_cpy, obj, size);
 	// TODO corrupt file
-	dump_obj(obj, size);
+	dump_obj(obj_cpy, size);
+	free(obj_cpy);
 }
 
 static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
@@ -53,6 +83,7 @@ static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
 		magic_nb[4] == ELFCLASS64)
 	{
 		printf("ELF64 detected in %s\n", obj_name);
+		//set_cpu(1);
 		handle_obj(obj, size);
 	}
 	else

@@ -25,5 +25,8 @@
 #include <elf.h>
 
 int				print_err(char *err, char *arg);
+//void			set_cpu(u_int8_t cpu);
+//uint64_t		cpu_64(uint64_t n);
+//uint32_t		cpu_32(uint32_t n);
 
 #endif
