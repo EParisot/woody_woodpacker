@@ -26,9 +26,10 @@ static int dump_obj(void *obj, size_t size)
 	return (0);
 }
 
-static void debug_dump(unsigned int *data, size_t start_addr, size_t size)
+void debug_dump(unsigned int *data, size_t start_addr, size_t text_size)
 {
-	for (size_t j = 0; j * 4 < size; j += 1)
+	printf("text size = %ld bytes", text_size);
+	for (size_t j = 0; j * 4 < text_size; j += 1)
 	{
 		if (j % 4 == 0)
 			printf("\n %04lx - ", start_addr + j * 4);
@@ -55,7 +56,6 @@ unsigned int *get_text(void *obj, size_t *text_size)
 			// align sh size on 8
 			while (*text_size % 8 != 0)
 				(*text_size)++;
-			printf("text size = %ld\n", *text_size);
 			if ((text_content = malloc(*text_size)) == NULL)
 				return NULL;
 			ft_bzero(text_content, *text_size);
@@ -73,23 +73,24 @@ static void handle_obj(void *obj, size_t size)
 	unsigned int *text_content;
 	size_t text_size;
 
-	// get text content
-	if ((text_content = get_text(obj, &text_size)) == NULL)
-	{
-		printf("Error: copying text section.\n");
-		return ;
-	}
-	free(text_content);
-	// copy origin file
+	// copy original file
 	if ((obj_cpy = malloc(size)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
 		return ;
 	}
 	ft_memcpy(obj_cpy, obj, size);
-	// TODO encrypt file
+	// get .text content
+	if ((text_content = get_text(obj_cpy, &text_size)) == NULL)
+	{
+		printf("Error: copying text section.\n");
+		free(obj_cpy);
+		return ;
+	}
+	// TODO encrypt .text
 	dump_obj(obj_cpy, size);
 	free(obj_cpy);
+	free(text_content);
 }
 
 static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
