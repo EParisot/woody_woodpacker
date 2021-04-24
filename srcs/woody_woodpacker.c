@@ -29,7 +29,7 @@ static int dump_obj(void *obj, size_t size)
 static void handle_obj(void *obj, size_t size)
 {
 	void *obj_cpy;
-	void *text_content;
+	unsigned int *text_content;
 	size_t text_size;
 	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)obj;
 	int shnum = ehdr->e_shnum;
@@ -41,6 +41,9 @@ static void handle_obj(void *obj, size_t size)
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
 			text_size = shdr[i].sh_size;
+			// align size on 8
+			while (text_size % 8 != 0)
+				text_size++;
 			printf("text size = %ld\n", text_size);
 			if ((text_content = malloc(text_size)) == NULL)
 			{
@@ -49,14 +52,13 @@ static void handle_obj(void *obj, size_t size)
 			}
 			ft_bzero(text_content, text_size);
 			ft_memcpy(text_content, obj + shdr[i].sh_offset, text_size);
-			for (size_t j = 0; j < text_size; ++j)
+			for (size_t j = 0; j * 4 < text_size; j += 1)
 			{
-				if (j % 16 == 0)
+				if (j % 4 == 0)
 					printf("\n %04lx - ", j);
-				printf("%02x", ((unsigned char *)text_content)[j]);
-				if ((j + 1) % 4 == 0)
-					printf(" ");
+				printf("%08x ", cpu_32(text_content[j]));
 			}
+			printf("\n");
 			free(text_content);
 		}
   	}
@@ -73,17 +75,20 @@ static void handle_obj(void *obj, size_t size)
 
 static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
 {
-	char	magic_nb[5];
+	char	hdr[6];
 
-	ft_strncpy(magic_nb, obj, 5);
-	if (magic_nb[0] == 0x7f && \
-		magic_nb[1] == 'E' && \
-		magic_nb[2] == 'L' && \
-		magic_nb[3] == 'F' && \
-		magic_nb[4] == ELFCLASS64)
+	ft_strncpy(hdr, obj, 6);
+	if (hdr[0] == 0x7f && \
+		hdr[1] == 'E' && \
+		hdr[2] == 'L' && \
+		hdr[3] == 'F' && \
+		hdr[4] == ELFCLASS64)
 	{
 		printf("ELF64 detected in %s\n", obj_name);
-		//set_cpu(1);
+		if (hdr[5] == 1)
+			set_cpu(1);
+		else
+			set_cpu(0);
 		handle_obj(obj, size);
 	}
 	else
