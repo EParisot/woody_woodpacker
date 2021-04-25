@@ -22,20 +22,20 @@
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <sys/mman.h>
-#include <elf.h>
+# include <elf.h>
 
 typedef struct s_env
 {
 	void 			*obj;
+	void 			*obj_cpy;
 	u_int8_t 		cpu;
 	size_t			obj_size;
 	unsigned int	*text_content;
 	size_t 			text_size;
-	long unsigned int entrypoint;
-	void 			*obj_cpy;
-	
+	void 			*injected_hdr;
+	unsigned int 	entrypoint;
+	unsigned int 	inject_addr;
 }				t_env;
-
 
 int				print_err(char *err, char *arg);
 
