@@ -12,90 +12,95 @@
 
 #include "../includes/woody_woodpacker.h"
 
-static int dump_obj(void *obj, size_t size)
+static int dump_obj(t_env *env)
 {
 	int fd;
 
-	if ((fd = open("woody", O_WRONLY)) < 0)
+	if ((fd = open("woody", O_WRONLY | O_CREAT)) < 0)
 	{
-		printf("Error creating 'woody' file.\n");
+		printf("Error %d creating 'woody' file.\n", fd);
 		return (-1);
 	}
-	write(fd, obj, size);
+	write(fd, env->obj, env->obj_size);
 	close(fd);
 	return (0);
 }
 
-void debug_dump(unsigned int *data, size_t start_addr, size_t text_size)
+void debug_dump(t_env *env)
 {
-	printf("text size = %ld bytes", text_size);
-	for (size_t j = 0; j * 4 < text_size; j += 1)
+	printf("text size = %ld bytes", env->text_size);
+	for (size_t j = 0; j * 4 < env->text_size; j += 1)
 	{
 		if (j % 4 == 0)
-			printf("\n %04lx - ", start_addr + j * 4);
-		printf("%08x ", cpu_32(data[j]));
+			printf("\n %04lx - ", env->entrypoint + j * 4);
+		printf("%08x ", cpu_32(env->text_content[j], env->cpu));
 	}
 	printf("\n");
 }
 
-unsigned int *get_text(void *obj, size_t *text_size) 
+int get_text(t_env *env) 
 {
-	unsigned int *text_content;
-	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)obj;
+	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)env->obj;
 	int shnum = ehdr->e_shnum;
-	Elf64_Shdr *shdr = (Elf64_Shdr *)(obj + ehdr->e_shoff);
+	Elf64_Shdr *shdr = (Elf64_Shdr *)(env->obj + ehdr->e_shoff);
 	Elf64_Shdr *sh_strtab = &shdr[ehdr->e_shstrndx];
-	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
+	const char *sh_strtab_p = env->obj + sh_strtab->sh_offset;
 
 	for (int i = 0; i < shnum; ++i)
 	{
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
-			*text_size = shdr[i].sh_size;
+			env->text_size = shdr[i].sh_size;
 			// align sh size on 8
-			while (*text_size % 8 != 0)
-				(*text_size)++;
-			if ((text_content = malloc(*text_size)) == NULL)
-				return NULL;
-			ft_bzero(text_content, *text_size);
-			ft_memcpy(text_content, obj + shdr[i].sh_offset, *text_size);
-			debug_dump(text_content, shdr[i].sh_offset, *text_size);
-			return(text_content);
+			while (env->text_size % 8 != 0)
+				(env->text_size)++;
+			if ((env->text_content = malloc(env->text_size)) == NULL)
+				return 1;
+			ft_bzero(env->text_content, env->text_size);
+			ft_memcpy(env->text_content, env->obj + shdr[i].sh_offset, env->text_size);
+			debug_dump(env);
+			return 0;
 		}
   	}
-	return NULL;
+	return 1;
 }
 
-static void handle_obj(void *obj, size_t size)
+static int handle_obj(t_env *env)
 {
-	void *obj_cpy;
-	unsigned int *text_content;
-	size_t text_size;
-
 	// copy original file
-	if ((obj_cpy = malloc(size)) == NULL)
+	if ((env->obj_cpy = malloc(env->obj_size)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
-		return ;
+		return 1;
 	}
-	ft_memcpy(obj_cpy, obj, size);
+	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
+	// get entrypoint
+
 	// get .text content
-	if ((text_content = get_text(obj_cpy, &text_size)) == NULL)
+	if (get_text(env))
 	{
 		printf("Error: copying text section.\n");
-		free(obj_cpy);
-		return ;
+		return 1;
 	}
 	// TODO encrypt .text
-	dump_obj(obj_cpy, size);
-	free(obj_cpy);
-	free(text_content);
+	dump_obj(env);
+	return 0;
+}
+
+static void clear_env(t_env *env)
+{
+	if (env->obj_cpy)
+		free(env->obj_cpy);
+	if (env->text_content)
+		free(env->text_content);
+	free(env);
 }
 
 static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
 {
 	char	hdr[6];
+	t_env 	*env;
 
 	ft_strncpy(hdr, obj, 6);
 	if (hdr[0] == 0x7f && \
@@ -105,11 +110,22 @@ static void 		woody_woodpacker(void *obj, size_t size, char *obj_name)
 		hdr[4] == ELFCLASS64)
 	{
 		printf("ELF64 detected in %s\n", obj_name);
+		if ((env = (t_env *)malloc(sizeof(t_env))) == NULL)
+		{
+			return;
+		}
+		env->obj = obj;
+		env->obj_size = size;
+		env->text_content = NULL;
+		env->text_size = 0;
+		env->entrypoint = 0;
+		env->obj_cpy = NULL;
 		if (hdr[5] == 1)
-			set_cpu(1);
+			env->cpu = 1;
 		else
-			set_cpu(0);
-		handle_obj(obj, size);
+			env->cpu = 0;
+		handle_obj(env);
+		clear_env(env);
 	}
 	else
 	{
