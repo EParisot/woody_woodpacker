@@ -21,81 +21,91 @@ static int dump_obj(t_env *env)
 		printf("Error %d creating 'woody' file.\n", fd);
 		return (-1);
 	}
-	write(fd, env->obj_cpy, env->obj_size);
+	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->obj_size + PAYLOAD_SIZE);
 	close(fd);
 	return (0);
 }
 
-void debug_dump(t_env *env)
-{
-	printf("\nDEBUG: .text\n.text size = %ld bytes", env->text_size);
-	for (size_t j = 0; j * 4 < env->text_size; j += 1)
-	{
-		if (j % 4 == 0)
-			printf("\n %04lx - ", env->entrypoint + j * 4);
-		printf("%08x ", cpu_32(env->text_content[j], env->cpu));
-	}
-	printf("\n");
-}
-
-void debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p)
-{
-	printf("\nDEBUG: %s SHdr\n", label);
-	printf("sh_name: %s\n", sh_strtab_p + shdr.sh_name);
-	printf("sh_offset: %08lx\n", shdr.sh_offset);
-	printf("sh_addr: %08lx\n", shdr.sh_addr);
-	printf("sh_size: %08lx\n", shdr.sh_size);
-	printf("sh_flags: %04lx\n", shdr.sh_flags);
-	printf("sh_addralign: %02lx\n", shdr.sh_addralign);
-}
-
-void debug_phdr(Elf64_Phdr phdr, char *label)
-{
-	printf("\nDEBUG: %s PHdr\n", label);
-	printf("p_offset: %08lx\n", phdr.p_offset);
-	printf("p_vaddr: %08lx\n", phdr.p_vaddr);
-	printf("p_filesz: %08lx\n", phdr.p_filesz);
-	printf("p_memsz: %08lx\n", phdr.p_memsz);
-	printf("p_flags: %04x\n", phdr.p_flags);
-	printf("p_align: %02lx\n", phdr.p_align);
-}
-
-static void find_empty_space(t_env *env, Elf64_Phdr *phdr) // TODO FIND A BETTER PLACE
-{
-	static size_t done;
-	//size_t curr_size = (phdr->p_vaddr + phdr->p_align) - (phdr->p_vaddr + phdr->p_filesz);
-
-	if (done == 0 && phdr->p_flags == 5)
-	{
-		done = 1;
-		env->inject_addr = phdr->p_vaddr + phdr->p_filesz;
-		env->injected_hdr = phdr;
-	}
-}
-
 static void inject_code(t_env *env)
 {
-	char code[] = "x31xc0x31xdbx31xd2x68x72x6cx64x21xc6x44x24x03x0ax68x6fx20x77x6fx68x48x65x6cx6cx89xe1xb2x0cxb0x04xb3x01xcdx80xb2x0cx01xd4x00";
-	char jmp[] = "xe9xffxffxffxff";
-	char pusha[] = "x60";
-	char popa[] = "x61";
+	//char pusha[] = {0x60, 0x0};
+	//char popa[] = {0x61, 0x0};
+	char mov[] = {0x48, 0xc7, 0xc0, 0x0};
+	char jmp[] = {0xff, 0xe0, 0x0};
 	unsigned int jmp_addr;
 
-	// replace entrypoint
-	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr;
-	// inject code
-	ft_memmove(env->obj_cpy + env->inject_addr, pusha, ft_strlen(pusha));
-	ft_memmove(env->obj_cpy + env->inject_addr + ft_strlen(pusha), code, ft_strlen(code));
-	ft_memmove(env->obj_cpy + env->inject_addr + ft_strlen(pusha) + ft_strlen(code), popa, ft_strlen(popa));
-	// set the pointer back to original entrypoint
-	jmp_addr = env->entrypoint - (env->inject_addr + ft_strlen(code));
-	ft_memmove(jmp + 1, &jmp_addr, 4);
-	ft_memmove(env->obj_cpy + env->inject_addr + ft_strlen(pusha) + ft_strlen(code) + ft_strlen(popa), jmp, ft_strlen(jmp));
-	// set the new injected hdr size
-	((Elf64_Phdr *)env->injected_hdr)->p_filesz += ft_strlen(pusha) + ft_strlen(code) + ft_strlen(popa) + ft_strlen(jmp);
-	((Elf64_Phdr *)env->injected_hdr)->p_memsz += ft_strlen(pusha) + ft_strlen(code) + ft_strlen(popa) + ft_strlen(jmp);
+	size_t payload_size = ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp);
+	//size_t payload_size = ft_strlen(pusha) + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp) + ft_strlen(popa);
 
-	 // TODO ADAPT TO BETTER PLACED CODE
+	// replace entrypoint
+	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
+
+	// inject code
+	//ft_memmove(env->obj_cpy + env->inject_offset, pusha, ft_strlen(pusha));
+	//ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(pusha), mov, ft_strlen(mov));
+	ft_memmove(env->obj_cpy + env->inject_offset, mov, ft_strlen(mov));
+
+	jmp_addr = env->entrypoint; // jump back to original entrypoint
+
+	ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov), &jmp_addr, sizeof(unsigned int));
+	ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov) + sizeof(unsigned int), jmp, ft_strlen(jmp));
+	//ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp), popa, ft_strlen(popa));
+	
+	// set the new injected phdr
+	if (env->found_code_cave)
+	{
+		env->inject_phdr->p_filesz += payload_size;
+		env->inject_phdr->p_memsz += payload_size;
+	}
+	else
+	{
+		env->inject_phdr->p_type = PT_LOAD;
+		env->inject_phdr->p_offset = env->inject_offset;
+		env->inject_phdr->p_paddr = env->inject_offset;
+		env->inject_phdr->p_vaddr = env->inject_offset;
+		env->inject_phdr->p_filesz = payload_size;
+		env->inject_phdr->p_memsz = payload_size;
+		env->inject_phdr->p_flags = PF_R | PF_X;
+		env->inject_phdr->p_align = 0x1000;
+		// set the new injected shdr
+		env->inject_shdr->sh_type = SHT_PROGBITS;
+		env->inject_shdr->sh_offset = env->inject_offset;
+		env->inject_shdr->sh_addr = env->inject_offset;
+		env->inject_shdr->sh_size = payload_size;
+		env->inject_shdr->sh_flags = SHF_ALLOC | SHF_EXECINSTR;
+		env->inject_shdr->sh_addralign = 16;
+	}
+}
+
+unsigned int find_code_cave(unsigned char *start, unsigned int end, unsigned int code_size) // TODO check payload size fits in cave
+{
+	unsigned int code_cave = 0;
+	unsigned int best = 0;
+	size_t i = 0;
+	static size_t max;
+
+	while(code_cave < end) 
+	{
+		i = 0;
+		while(code_cave + i < end && start[code_cave + i] == 0)
+		{
+			++i;
+		}
+		if (i)
+		{
+			if (i > max && i > code_size)
+			{
+				best = code_cave;
+				max = i;
+			}
+			code_cave += i;
+		}
+		else
+		{
+			++code_cave;
+		}
+	}
+	return (best);
 }
 
 int parse_elf(t_env *env) 
@@ -113,32 +123,64 @@ int parse_elf(t_env *env)
 	// get str table
 	Elf64_Shdr *sh_strtab = &shdr[ehdr->e_shstrndx];
 	const char *sh_strtab_p = env->obj_cpy + sh_strtab->sh_offset;
-	// get entrypoint
+	
+	// get original entrypoint
 	env->entrypoint = ehdr->e_entry;
 
+	int load_found = 0;
 	for (int i = 0; i < phnum; ++i)
 	{
-		/*// get .note.* section
+		// get base address
+		if (phdr[i].p_type == PT_LOAD && load_found == 0)
+		{
+			//debug_phdr(phdr[i], "FIRST_PT_LOAD");
+			env->obj_base += phdr[i].p_vaddr;
+			load_found = 1;
+		}
+		// find code cave in executable segment
+		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5)
+		{	
+			if (i + 1 < phnum)
+			{
+				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i+1].p_offset, PAYLOAD_SIZE);
+				if (env->inject_offset != 0)
+				{
+					env->inject_offset += phdr[i].p_offset;
+					env->inject_addr = env->inject_offset + env->obj_base;
+					env->found_code_cave = 1;
+					env->inject_phdr = &(phdr[i]);
+				}
+				else
+				{
+					printf("No codecave found, appending to the end of file\n");
+				}
+			}
+		}
+		// get .note.* phdr if no code_cave found (so it will become the new injected phdr)
 		if (phdr[i].p_type == PT_NOTE)
 		{
-			debug_phdr(phdr[i], "PT_NOTE");
-		}
-		// find best place to inject
-		else*/ if (phdr[i].p_type == PT_LOAD) {
-			find_empty_space(env, &phdr[i]);
-			debug_phdr(phdr[i], "PT_LOAD");
+			//debug_phdr(phdr[i], "PT_NOTE");
+			if (env->found_code_cave == 0)
+			{
+				env->inject_phdr = &(phdr[i]);
+				env->inject_offset = env->obj_size;
+				env->inject_addr = env->inject_offset + env->obj_base;
+			}
+			break;
 		}
 	}
-	
-	printf("\nPlace to inject = %08x\n", env->inject_addr);
-
 	for (int i = 0; i < shnum; ++i)
 	{
-		/*// get .note.ABI-tag section
-		if (shdr[i].sh_type == SHT_NOTE)
+		// get .note.ABI-tag shdr if no code_cave found (so it will become the new injected phdr)
+		if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.ABI-tag"))
 		{
-			debug_shdr(shdr[i], "SHT_NOTE", sh_strtab_p);
-		}*/
+			//debug_shdr(shdr[i], "SHT_NOTE", sh_strtab_p);
+			if (env->found_code_cave == 0)
+			{
+				env->inject_shdr = &(shdr[i]);
+			}
+			continue;
+		}
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
@@ -150,11 +192,16 @@ int parse_elf(t_env *env)
 				return 1;
 			ft_bzero(env->text_content, env->text_size);
 			ft_memcpy(env->text_content, env->obj + shdr[i].sh_offset, env->text_size);
-			debug_dump(env);
+			//debug_dump(env, env->text_content, env->entrypoint, env->text_size);
 		}
   	}
 
+	printf("\noriginal entrypoint: %08x\n", env->entrypoint);
+	printf("new entrypoint: %08x\n", env->inject_addr);
+
 	inject_code(env);
+
+	debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_offset, 100);
 
 	return 0;
 }
@@ -162,11 +209,12 @@ int parse_elf(t_env *env)
 static int 		handle_obj(t_env *env)
 {
 	// copy original file
-	if ((env->obj_cpy = malloc(env->obj_size)) == NULL)
+	if ((env->obj_cpy = malloc(env->obj_size + PAYLOAD_SIZE)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
 		return 1;
 	}
+	ft_bzero(env->obj_cpy, env->obj_size + PAYLOAD_SIZE);
 	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
 	// get .text content
 	if (parse_elf(env))
@@ -209,10 +257,15 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->obj = obj;
 		env->obj_cpy = NULL;
 		env->obj_size = size;
+		env->obj_base = 0;
+		env->found_code_cave = 0;
 		env->text_content = NULL;
 		env->text_size = 0;
 		env->entrypoint = 0;
+		env->inject_offset = 0;
 		env->inject_addr = 0;
+		env->inject_phdr = NULL;
+		env->inject_shdr = NULL;
 		if (hdr[5] == 1)
 			env->cpu = 1;
 		else

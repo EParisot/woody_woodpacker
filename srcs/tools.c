@@ -38,3 +38,37 @@ uint64_t		cpu_64(uint64_t n, uint8_t cpu)
 		return (ft_swap_64(n));
 	return (n);
 }
+
+void debug_dump(t_env *env, unsigned int *content, unsigned int start_addr, size_t size)
+{
+	printf("\nDEBUG: size = %ld bytes", size);
+	for (size_t j = 0; j * 4 < size; j += 1)
+	{
+		if (j % 4 == 0)
+			printf("\n %04lx - ", start_addr + j * 4);
+		printf("%08x ", cpu_32(content[j], env->cpu));
+	}
+	printf("\n");
+}
+
+void debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p)
+{
+	printf("\nDEBUG: %s SHdr\n", label);
+	printf("sh_name: %s\n", sh_strtab_p + shdr.sh_name);
+	printf("sh_offset: %08lx\n", shdr.sh_offset);
+	printf("sh_addr: %08lx\n", shdr.sh_addr);
+	printf("sh_size: %08lx\n", shdr.sh_size);
+	printf("sh_flags: %04lx\n", shdr.sh_flags);
+	printf("sh_addralign: %02lx\n", shdr.sh_addralign);
+}
+
+void debug_phdr(Elf64_Phdr phdr, char *label)
+{
+	printf("\nDEBUG: %s PHdr\n", label);
+	printf("p_offset: %08lx\n", phdr.p_offset);
+	printf("p_vaddr: %08lx\n", phdr.p_vaddr);
+	printf("p_filesz: %08lx\n", phdr.p_filesz);
+	printf("p_memsz: %08lx\n", phdr.p_memsz);
+	printf("p_flags: %04x\n", phdr.p_flags);
+	printf("p_align: %02lx\n", phdr.p_align);
+}
