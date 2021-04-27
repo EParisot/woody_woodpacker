@@ -30,25 +30,30 @@ static void inject_code(t_env *env)
 {
 	//char pusha[] = {0x60, 0x0};
 	//char popa[] = {0x61, 0x0};
+
 	char mov[] = {0x48, 0xc7, 0xc0, 0x0};
 	char jmp[] = {0xff, 0xe0, 0x0};
 	unsigned int jmp_addr;
 
-	size_t payload_size = ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp);
+	build_payload(env); // TODO FIX IT !
+
+	size_t payload_size =  env->payload_size + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp);
 	//size_t payload_size = ft_strlen(pusha) + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp) + ft_strlen(popa);
 
 	// replace entrypoint
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
-	// inject code
 	//ft_memmove(env->obj_cpy + env->inject_offset, pusha, ft_strlen(pusha));
-	//ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(pusha), mov, ft_strlen(mov));
-	ft_memmove(env->obj_cpy + env->inject_offset, mov, ft_strlen(mov));
 
+	// inject payload
+	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
+
+	// inject code return mechanism
+	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size, mov, ft_strlen(mov));
 	jmp_addr = env->entrypoint; // jump back to original entrypoint
-
-	ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov), &jmp_addr, sizeof(unsigned int));
-	ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov) + sizeof(unsigned int), jmp, ft_strlen(jmp));
+	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size + ft_strlen(mov), &jmp_addr, sizeof(unsigned int));
+	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size + ft_strlen(mov) + sizeof(unsigned int), jmp, ft_strlen(jmp));
+	
 	//ft_memmove(env->obj_cpy + env->inject_offset + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp), popa, ft_strlen(popa));
 	
 	// set the new injected phdr
@@ -201,7 +206,8 @@ int parse_elf(t_env *env)
 
 	inject_code(env);
 
-	debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_offset, 100);
+	printf("DEBUG injected code:");
+	debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_offset, PAYLOAD_SIZE);
 
 	return 0;
 }
@@ -233,6 +239,8 @@ static void 	clear_env(t_env *env)
 		free(env->obj_cpy);
 	if (env->text_content)
 		free(env->text_content);
+	if (env->payload_content)
+		free(env->payload_content);
 	free(env);
 }
 
@@ -258,6 +266,8 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->obj_cpy = NULL;
 		env->obj_size = size;
 		env->obj_base = 0;
+		env->payload_content = NULL;
+		env->payload_size = 0;
 		env->found_code_cave = 0;
 		env->text_content = NULL;
 		env->text_size = 0;
@@ -298,7 +308,10 @@ static void			read_obj(char *obj_name)
 	}
 	if ((obj = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0)) == \
 			MAP_FAILED)
+	{
 		print_err("Error mapping file", obj_name);
+		close(fd);
+	}
 	else
 	{
 		close(fd);

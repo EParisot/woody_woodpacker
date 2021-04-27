@@ -1,4 +1,6 @@
 compile with 
 ```
-gcc -no-pie -static SRC -o OUT
+gcc -m64 -no-pie -static SRC -o OUT
+OR
+clang -m64 SRC -o OUT
 ```

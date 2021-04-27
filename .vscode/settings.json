@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"woody_woodpacker.h": "c",
+		"*.s": "c"
+	}
+}

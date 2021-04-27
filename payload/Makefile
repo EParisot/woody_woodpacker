@@ -10,51 +10,26 @@
 #                                                                              #
 # **************************************************************************** #
 
-NAME	=	woody_woodpacker
+NAME	=	payload
 
-SRCS	=	srcs/woody_woodpacker.c \
-			srcs/payload_builder.c \
-			srcs/tools.c \
+SRCS	=	payload.s
 
-INC		=	includes/woody_woodpacker.h
+RM 		=	rm -rf
 
-OBJS	=	$(SRCS:.c=.o)
+all		:	$(NAME)
 
-LIBS	=	libft/libft.a
-
-PAYLOAD =	payload/payload
-
-RESSOURCES=	ressources/sample64
-
-CFLAGS	=	-Wall -Wextra -Werror -g3
-
-RM 		= 	rm -rf
-
-all		:	$(LIBS) $(NAME) $(PAYLOAD) $(RESSOURCES)
-
-$(NAME)	:	$(OBJS) $(INC)
-	clang $(CFLAGS) $(OBJS) $(LIBS) -o $(NAME)
-
-$(LIBS)	: 	.FORCE
-	@$(MAKE) -C libft
-
-$(PAYLOAD): .FORCE
-	@$(MAKE) -C payload
-
-$(RESSOURCES): .FORCE
-	@$(MAKE) -C ressources
-
-.FORCE	:
+$(NAME)	:	$(SRCS)
+	nasm -f elf64 $(SRCS) -o $(NAME).o
+	ld $(NAME).o -o $(NAME)
 
 clean	:
-	$(RM) $(OBJS)
-	$(MAKE) clean -C libft
-	$(MAKE) clean -C payload 
-	$(MAKE) clean -C ressources 
+	$(RM) $(NAME).o
 
-fclean	:	clean
-	$(RM) $(NAME) woody $(LIBS) $(PAYLOAD) $(RESSOURCES)
+fclean	: clean
+	$(RM) $(NAME)
 
-re		:	fclean all
+re		: clean all
 
-.PHONY	: all re clean fclean
+.PHONY	: all re clean
+
+
