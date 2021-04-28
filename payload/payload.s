@@ -11,7 +11,7 @@ _start:
 	push r9
 	push r11
 
-	mov rax, qword "Woody"
+	mov rax, qword "...."
 	push rax
 	mov rax, 1       	 ; //write(
 	mov rdi, 1       	 ; //  STDOUT_FILENO,
@@ -19,8 +19,26 @@ _start:
 	mov rdx, 5   	  	 ; //  sizeof(char)
 	syscall        		 ; //);
 	pop rax				 ; //clear stack
+
+	mov rax, qword "WOODY"
+	push rax
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, rsp
+	mov rdx, 5
+	syscall
+	pop rax
+
+	mov rax, qword "...."
+	push rax
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, rsp
+	mov rdx, 4
+	syscall
+	pop rax
 	
-	mov rax, 10			 : // print \n
+	mov rax, 10			 ; // print \n
 	push rax
 	mov rax, 1
 	mov rdi, 1
