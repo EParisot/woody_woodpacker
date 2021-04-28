@@ -191,8 +191,8 @@ int parse_elf(t_env *env)
 		{
 			env->text_size = shdr[i].sh_size;
 			// align sh size on 8
-			while (env->text_size % 8 != 0)
-				++(env->text_size);
+			//while (env->text_size % 8 != 0)
+			//	++(env->text_size);
 			if ((env->text_content = malloc(env->text_size)) == NULL)
 				return 1;
 			ft_bzero(env->text_content, env->text_size);
