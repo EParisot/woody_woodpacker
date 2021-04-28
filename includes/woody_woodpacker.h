@@ -26,7 +26,7 @@
 
 
 #define PAYLOAD_SRC "payload/payload"
-#define PAYLOAD_SIZE 500
+#define JUMP_SIZE 9
 
 
 typedef struct s_env

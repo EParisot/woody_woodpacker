@@ -21,7 +21,7 @@ static int dump_obj(t_env *env)
 		printf("Error %d creating 'woody' file.\n", fd);
 		return (-1);
 	}
-	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->obj_size + PAYLOAD_SIZE);
+	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->obj_size + env->payload_size + JUMP_SIZE);
 	close(fd);
 	return (0);
 }
@@ -34,8 +34,6 @@ static void inject_code(t_env *env)
 	char mov[] = {0x48, 0xc7, 0xc0, 0x0};
 	char jmp[] = {0xff, 0xe0, 0x0};
 	unsigned int jmp_addr;
-
-	build_payload(env); // TODO FIX IT !
 
 	size_t payload_size =  env->payload_size + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp);
 	//size_t payload_size = ft_strlen(pusha) + ft_strlen(mov) + sizeof(unsigned int) + ft_strlen(jmp) + ft_strlen(popa);
@@ -147,7 +145,7 @@ int parse_elf(t_env *env)
 		{	
 			if (i + 1 < phnum)
 			{
-				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i+1].p_offset, PAYLOAD_SIZE);
+				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i+1].p_offset, env->payload_size + JUMP_SIZE);
 				if (env->inject_offset != 0)
 				{
 					env->inject_offset += phdr[i].p_offset;
@@ -190,45 +188,53 @@ int parse_elf(t_env *env)
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
 			env->text_size = shdr[i].sh_size;
-			// align sh size on 8
-			//while (env->text_size % 8 != 0)
-			//	++(env->text_size);
+			
 			if ((env->text_content = malloc(env->text_size)) == NULL)
 				return 1;
 			ft_bzero(env->text_content, env->text_size);
 			ft_memcpy(env->text_content, env->obj + shdr[i].sh_offset, env->text_size);
-			//debug_dump(env, env->text_content, env->entrypoint, env->text_size);
+			/*// align sh size on 8
+			int k = 0;
+			while (env->text_size % 8 != 0)
+				++k;
+			debug_dump(env, env->text_content, env->entrypoint, env->text_size + k);*/
 		}
   	}
 
 	printf("\noriginal entrypoint: %08x\n", env->entrypoint);
 	printf("new entrypoint: %08x\n", env->inject_addr);
 
-	inject_code(env);
-
-	printf("DEBUG injected code:");
-	debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_offset, PAYLOAD_SIZE);
-
 	return 0;
 }
 
 static int 		handle_obj(t_env *env)
 {
+	build_payload(env);
+
 	// copy original file
-	if ((env->obj_cpy = malloc(env->obj_size + PAYLOAD_SIZE)) == NULL)
+	if ((env->obj_cpy = malloc(env->obj_size + env->payload_size + JUMP_SIZE)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
 		return 1;
 	}
-	ft_bzero(env->obj_cpy, env->obj_size + PAYLOAD_SIZE);
+	ft_bzero(env->obj_cpy, env->obj_size + env->payload_size + JUMP_SIZE);
 	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
+	
 	// get .text content
 	if (parse_elf(env))
 	{
 		printf("Error parsing elf.\n");
 		return 1;
 	}
+		
+	inject_code(env);
+
+	printf("DEBUG injected code:");
+	debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_offset, env->payload_size + JUMP_SIZE);
+
 	// TODO encrypt .text
+
+	// save new obj
 	dump_obj(env);
 	return 0;
 }
