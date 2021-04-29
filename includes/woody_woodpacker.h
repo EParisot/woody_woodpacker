@@ -27,6 +27,7 @@
 
 #define PAYLOAD_SRC "payload/payload"
 #define JUMP_SIZE 9
+#define PAGE_OFFSET 0x1000
 
 
 typedef struct s_env
