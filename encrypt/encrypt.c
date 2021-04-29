@@ -99,6 +99,7 @@ int main(int ac, char *av[])
 	A[6] = 0x4D34D34D;
 	A[7] = 0xD34D34D3;
 
+	// loop
 	unsigned int *ret;
 	for (int i = 0; i < 4; ++i)
 	{
