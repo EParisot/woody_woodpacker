@@ -2,13 +2,10 @@
 # include <stdlib.h>
 # include <string.h>
 
-
-
 #define KEY "shqs8N674çzqiàis"
 #define IV "gs6SHzèf"
 
 #define WORDSIZE 0x100000000
-
 #define LSW(n) (n << 8) >> 8
 #define MSW(n) (n >> 8) << 8
 
@@ -45,7 +42,7 @@ unsigned int *rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, un
 	return X;
 }
 
-int rabbit(char *input)
+int rabbit(char *input, char *key, char *iv)
 {
 	unsigned int 	X[8];
 	unsigned int 	C[8];
@@ -65,7 +62,7 @@ int rabbit(char *input)
 	for (int i = 0; i < 16; ++i)
 	{
 		if (i % 2 == 0)
-			K[i/2] = (KEY[i] << 8) + KEY[i+1];
+			K[i/2] = (key[i] << 8) + key[i+1];
 	}
 
 	// Key Setup Scheme
@@ -100,14 +97,14 @@ int rabbit(char *input)
 	}
 
 	// IV Setup Scheme
-	C[0] = C[0] ^ ((unsigned int *)IV)[0];
-	C[1] = C[1] ^ (((short *)IV)[5] | ((short *)IV)[2]);
-	C[2] = C[2] ^ ((unsigned int *)IV)[4];
-	C[3] = C[3] ^ (((short *)IV)[4] | ((short *)IV)[0]);
-	C[4] = C[4] ^ ((unsigned int *)IV)[0];
-	C[5] = C[5] ^ (((short *)IV)[5] | ((short *)IV)[2]);
-	C[6] = C[6] ^ ((unsigned int *)IV)[4];
-	C[7] = C[7] ^ (((short *)IV)[4] | ((short *)IV)[0]);
+	C[0] = C[0] ^ ((unsigned int *)iv)[0];
+	C[1] = C[1] ^ (((short *)iv)[5] | ((short *)iv)[2]);
+	C[2] = C[2] ^ ((unsigned int *)iv)[4];
+	C[3] = C[3] ^ (((short *)iv)[4] | ((short *)iv)[0]);
+	C[4] = C[4] ^ ((unsigned int *)iv)[0];
+	C[5] = C[5] ^ (((short *)iv)[5] | ((short *)iv)[2]);
+	C[6] = C[6] ^ ((unsigned int *)iv)[4];
+	C[7] = C[7] ^ (((short *)iv)[4] | ((short *)iv)[0]);
 
 	// init IV loop
 	for (int i = 0; i < 4; ++i)
@@ -117,6 +114,7 @@ int rabbit(char *input)
 
 	//printf("Algo Ready\n");
 
+	// main loop
 	int done = 0;
 	int str_c = 0;
 	while (!done)
@@ -162,7 +160,7 @@ int main(int ac, char *av[])
 	}
 	printf("Encrypting '%s'...\n", av[1]);
 
-	rabbit(av[1]);
+	rabbit(av[1], KEY, IV);
 	
 	return 0;
 }
