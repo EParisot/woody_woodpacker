@@ -17,7 +17,7 @@ unsigned int g(unsigned int a, unsigned int b)
 	return LSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE)) ^ MSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE));
 }
 
-unsigned int *rabbit(unsigned int *C, unsigned int *A, unsigned int *G, unsigned int *X, unsigned int *b)
+unsigned int *rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsigned int *X, unsigned int *b)
 {
 	// Counter System
 	for (int i = 0; i < 8; ++i)
@@ -45,15 +45,8 @@ unsigned int *rabbit(unsigned int *C, unsigned int *A, unsigned int *G, unsigned
 	return X;
 }
 
-int main(int ac, char *av[])
+int rabbit(char *input)
 {
-	if (ac != 2)
-	{
-		printf("Error: no input provided\n");
-		return 0;
-	}
-	printf("Encrypting '%s'...\n", av[1]);
-
 	unsigned int 	X[8];
 	unsigned int 	C[8];
 	short			K[16];
@@ -103,7 +96,7 @@ int main(int ac, char *av[])
 	// init KEY loop
 	for (int i = 0; i < 4; ++i)
 	{
-		rabbit(C, A, G, X, &b);
+		rabbit_round(C, A, G, X, &b);
 	}
 
 	// IV Setup Scheme
@@ -119,10 +112,10 @@ int main(int ac, char *av[])
 	// init IV loop
 	for (int i = 0; i < 4; ++i)
 	{
-		rabbit(C, A, G, X, &b);
+		rabbit_round(C, A, G, X, &b);
 	}
 
-	printf("Algo Ready\n");
+	//printf("Algo Ready\n");
 
 	int done = 0;
 	int str_c = 0;
@@ -137,21 +130,13 @@ int main(int ac, char *av[])
 		S[6] = ((short *)X)[12] ^ ((short *)X)[7];
 		S[7] = ((short *)X)[13] ^ ((short *)X)[2];
 
-		/*printf("S = ");
-		for (int i = 0; i < 16; ++i)
-			printf("%02x ", ((unsigned char*)S)[i]);
-		printf("\n");*/
-
-		//char test_res[5];
-		//memset(test_res, 5, 0);
 		// encrypt
-		for (int i = 0; i < 16; ++i)
+		int i = 0;
+		for (i = 0; i < 16; ++i)
 		{
-			if (str_c + i < strlen(av[1]))
+			if (str_c + i < strlen(input))
 			{
-				unsigned char res = av[1][str_c + i] ^ ((char *)S)[i];
-				++str_c;
-				//test_res[i] = res;
+				unsigned char res = input[str_c + i] ^ ((char *)S)[i];
 				printf("%02x ", res);
 			}
 			else
@@ -161,25 +146,23 @@ int main(int ac, char *av[])
 				break;
 			}
 		}
+		str_c += i;
 		
-		rabbit(C, A, G, X, &b);
+		rabbit_round(C, A, G, X, &b);
 		
 	}
+}
 
-	// decrypt
-	/*for (int i = 0; i < 128; ++i)
+int main(int ac, char *av[])
+{
+	if (ac != 2)
 	{
-		if (i < strlen(test_res))
-		{
-			unsigned char res = test_res[i] ^ ((char *)S)[i];
-			printf("%c ", res);
-		}
-		else
-		{
-			printf("\n");
-			break;
-		}
-	}*/
+		printf("Error: no input provided\n");
+		return 0;
+	}
+	printf("Encrypting '%s'...\n", av[1]);
+
+	rabbit(av[1]);
 	
 	return 0;
 }
