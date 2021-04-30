@@ -54,6 +54,9 @@ _start:
 	pop rdi
 	pop rax
 
-	;mov	rax, 60
+	mov rax, 0x42424242	; // jump back to entrypoint
+	jmp rax
+
+	;mov rax, 60
 	;mov rdi, 0
 	;syscall

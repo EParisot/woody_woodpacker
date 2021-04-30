@@ -28,23 +28,38 @@ static int dump_obj(t_env *env)
 
 static void inject_code(t_env *env)
 {
-	char mov[] = {0x48, 0xc7, 0xc0, 0x0};
-	char jmp[] = {0xff, 0xe0, 0x0};
-	unsigned int jmp_addr;
+	size_t i = 0;
+	int j = 0;
 
 	size_t payload_size =  env->payload_size + JUMP_SIZE;
 
 	// replace entrypoint
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
+	// replace jmp addr in payload
+	for (i = 0; i < env->payload_size; ++i)
+	{
+		if (i * 8 < env->payload_size)// && ((char*)env->payload_content)[i] == 0x42)
+		{
+			int found = 0;
+			for (j = 0; j < 5; ++j)
+			{
+				if (*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == 0x42424242)
+				{
+					found = 1;
+					break;
+				}
+			}
+			if (found)
+			{
+				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = env->entrypoint;
+				break;
+			}
+		}
+	}
+
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
-
-	// inject code return mechanism
-	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size, mov, ft_strlen(mov));
-	jmp_addr = env->entrypoint; // jump back to original entrypoint
-	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size + ft_strlen(mov), &jmp_addr, sizeof(unsigned int));
-	ft_memmove(env->obj_cpy + env->inject_offset + env->payload_size + ft_strlen(mov) + sizeof(unsigned int), jmp, ft_strlen(jmp));
 	
 	// set the new injected phdr
 	if (env->found_code_cave)
