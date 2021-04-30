@@ -15,6 +15,7 @@ NAME	=	woody_woodpacker
 SRCS	=	srcs/woody_woodpacker.c \
 			srcs/payload_builder.c \
 			srcs/tools.c \
+			srcs/encrypt.c
 
 INC		=	includes/woody_woodpacker.h
 

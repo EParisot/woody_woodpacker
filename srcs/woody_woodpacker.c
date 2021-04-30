@@ -181,12 +181,7 @@ int parse_elf(t_env *env)
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
 			env->text_size = shdr[i].sh_size;
-			
-			if ((env->text_content = malloc(env->text_size)) == NULL)
-				return 1;
-			ft_bzero(env->text_content, env->text_size);
-			ft_memcpy(env->text_content, env->obj + shdr[i].sh_offset, env->text_size);
-			//debug_dump(env, env->text_content, env->entrypoint, env->text_size + k);*/
+			env->text_addr = (char*)env->obj_cpy + shdr[i].sh_offset;
 		}
   	}
 
@@ -221,7 +216,13 @@ static int 		handle_obj(t_env *env)
 	//printf("DEBUG injected code:");
 	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size + JUMP_SIZE);
 
-	// TODO encrypt .text
+	// encrypt .text
+	if (rabbit_encrypt(env, KEY, IV))
+	{
+		printf("Error encrypting elf.\n");
+		return 1;
+	}
+	
 
 	// save new obj
 	dump_obj(env);
@@ -232,8 +233,6 @@ static void 	clear_env(t_env *env)
 {
 	if (env->obj_cpy)
 		free(env->obj_cpy);
-	if (env->text_content)
-		free(env->text_content);
 	if (env->payload_content)
 		free(env->payload_content);
 	free(env);
@@ -263,8 +262,8 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->payload_content = NULL;
 		env->payload_size = 0;
 		env->found_code_cave = 0;
-		env->text_content = NULL;
 		env->text_size = 0;
+		env->text_addr = NULL;
 		env->entrypoint = 0;
 		env->inject_offset = 0;
 		env->inject_addr = 0;

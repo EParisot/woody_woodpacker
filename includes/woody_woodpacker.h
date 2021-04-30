@@ -29,6 +29,10 @@
 #define JUMP_SIZE 9
 #define PAGE_OFFSET 0x1000
 
+#define KEY "shqs8N674çzqiàis"
+#define IV "gs6SHzèf"
+#define WORDSIZE 0x100000000
+
 
 typedef struct s_env
 {
@@ -43,7 +47,7 @@ typedef struct s_env
 	Elf64_Phdr 		*inject_phdr;
 	Elf64_Shdr 		*inject_shdr;
 	unsigned int 	entrypoint;
-	unsigned int	*text_content;
+	char			*text_addr;
 	size_t 			text_size;
 	int   			found_code_cave;
 	u_int8_t 		cpu;
@@ -59,5 +63,6 @@ void 			debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p);
 void 			debug_phdr(Elf64_Phdr phdr, char *label);
 
 int 			build_payload(t_env *env);
+int 			rabbit_encrypt(t_env *env, char *key, char *iv);
 
 #endif
