@@ -60,6 +60,7 @@ int main(int ac, char *av[])
 	unsigned int 	G[8];
 	unsigned int 	A[8];
 	unsigned int 	b = 0;
+	short			S[8];
 
 	memset(X, 8 * sizeof(unsigned int), 0);
 	memset(C, 8 * sizeof(unsigned int), 0);
@@ -74,7 +75,7 @@ int main(int ac, char *av[])
 			K[i/2] = (KEY[i] << 8) + KEY[i+1];
 	}
 
-	// init X and C
+	// Key Setup Scheme
 	for (int i = 0; i < 8; ++i)
 	{
 		if (i % 2 == 0)
@@ -99,18 +100,86 @@ int main(int ac, char *av[])
 	A[6] = 0x4D34D34D;
 	A[7] = 0xD34D34D3;
 
-	// loop
-	unsigned int *ret;
+	// init KEY loop
 	for (int i = 0; i < 4; ++i)
 	{
-		ret = rabbit(C, A, G, X, &b);
-		for (int j = 0; j < 8; ++j)
-			printf("Init buffer %d: %08x\n", i, ret[j]);
+		rabbit(C, A, G, X, &b);
 	}
 
+	// IV Setup Scheme
+	C[0] = C[0] ^ ((unsigned int *)IV)[0];
+	C[1] = C[1] ^ (((short *)IV)[5] | ((short *)IV)[2]);
+	C[2] = C[2] ^ ((unsigned int *)IV)[4];
+	C[3] = C[3] ^ (((short *)IV)[4] | ((short *)IV)[0]);
+	C[4] = C[4] ^ ((unsigned int *)IV)[0];
+	C[5] = C[5] ^ (((short *)IV)[5] | ((short *)IV)[2]);
+	C[6] = C[6] ^ ((unsigned int *)IV)[4];
+	C[7] = C[7] ^ (((short *)IV)[4] | ((short *)IV)[0]);
 
-	
+	// init IV loop
+	for (int i = 0; i < 4; ++i)
+	{
+		rabbit(C, A, G, X, &b);
+	}
 
 	printf("Algo Ready\n");
+
+	int done = 0;
+	int str_c = 0;
+	while (!done)
+	{
+		S[0] = ((short *)X)[0] ^ ((short *)X)[11];
+		S[1] = ((short *)X)[1] ^ ((short *)X)[6];
+		S[2] = ((short *)X)[4] ^ ((short *)X)[15];
+		S[3] = ((short *)X)[5] ^ ((short *)X)[10];
+		S[4] = ((short *)X)[8] ^ ((short *)X)[3];
+		S[5] = ((short *)X)[9] ^ ((short *)X)[14];
+		S[6] = ((short *)X)[12] ^ ((short *)X)[7];
+		S[7] = ((short *)X)[13] ^ ((short *)X)[2];
+
+		/*printf("S = ");
+		for (int i = 0; i < 16; ++i)
+			printf("%02x ", ((unsigned char*)S)[i]);
+		printf("\n");*/
+
+		//char test_res[5];
+		//memset(test_res, 5, 0);
+		// encrypt
+		for (int i = 0; i < 16; ++i)
+		{
+			if (str_c + i < strlen(av[1]))
+			{
+				unsigned char res = av[1][str_c + i] ^ ((char *)S)[i];
+				++str_c;
+				//test_res[i] = res;
+				printf("%02x ", res);
+			}
+			else
+			{
+				printf("\n");
+				done = 1;
+				break;
+			}
+		}
+		
+		rabbit(C, A, G, X, &b);
+		
+	}
+
+	// decrypt
+	/*for (int i = 0; i < 128; ++i)
+	{
+		if (i < strlen(test_res))
+		{
+			unsigned char res = test_res[i] ^ ((char *)S)[i];
+			printf("%c ", res);
+		}
+		else
+		{
+			printf("\n");
+			break;
+		}
+	}*/
+	
 	return 0;
 }
