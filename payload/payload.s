@@ -53,3 +53,7 @@ _start:
 	pop rsi
 	pop rdi
 	pop rax
+
+	;mov	rax, 60
+	;mov rdi, 0
+	;syscall

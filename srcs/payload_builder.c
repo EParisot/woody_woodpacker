@@ -35,12 +35,9 @@ int 		get_payload(t_env *env, void *obj)
 				return 1;
 			ft_bzero(env->payload_content, env->payload_size);
 			ft_memcpy(env->payload_content, obj + shdr[i].sh_offset, env->payload_size);
-			/*printf("DEBUG payload:");
-			// align sh size on 8
-			int k = 0;
-			while (env->text_size % 8 != 0)
-				++k;
-			debug_dump(env, env->payload_content, ehdr->e_entry, env->payload_size + k);*/
+			printf("DEBUG payload:");
+
+			//debug_dump(env, env->payload_content, ehdr->e_entry, env->payload_size);
 		}
   	}
 	return 0;

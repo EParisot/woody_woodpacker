@@ -12,14 +12,14 @@
 
 NAME	=	payload
 
-SRCS	=	payload.s
+ASM	=	payload.s
 
 RM 		=	rm -rf
 
 all		:	$(NAME)
 
-$(NAME)	:	$(SRCS)
-	nasm -f elf64 $(SRCS) -o $(NAME).o
+$(NAME)	:	$(ASM)
+	nasm -f elf64 $(ASM) -o $(NAME).o
 	ld $(NAME).o -o $(NAME)
 
 clean	:

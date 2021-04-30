@@ -217,18 +217,16 @@ static int 		handle_obj(t_env *env)
 	}
 		
 	inject_code(env);
-
 	//printf("DEBUG injected code:");
 	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size + JUMP_SIZE);
 
 	// encrypt .text
-	if (rabbit_encrypt(env, KEY, IV))
+	/*if (rabbit_encrypt(env, KEY, IV))
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}
+	}*/
 	
-
 	// save new obj
 	dump_obj(env);
 	return 0;
