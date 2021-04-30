@@ -177,6 +177,11 @@ int parse_elf(t_env *env)
 			}
 			continue;
 		}
+		// get build id
+		if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.gnu.build-id"))
+		{
+			// TODO init KEY an IV
+		}
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
