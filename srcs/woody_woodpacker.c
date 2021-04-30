@@ -42,9 +42,9 @@ static void inject_code(t_env *env)
 		if (i * 8 < env->payload_size)// && ((char*)env->payload_content)[i] == 0x42)
 		{
 			int found = 0;
-			for (j = 0; j < 5; ++j)
+			for (j = 0; j < 8; ++j)
 			{
-				if (*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == 0x42424242)
+				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == 0x42424242)
 				{
 					found = 1;
 					break;
@@ -53,6 +53,7 @@ static void inject_code(t_env *env)
 			if (found)
 			{
 				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = env->entrypoint;
+				printf("Found jmp addr, replacing...\n");
 				break;
 			}
 		}
