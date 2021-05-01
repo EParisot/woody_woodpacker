@@ -76,7 +76,7 @@ void _start()
 	A[7] = 0xD34D34D3;
 
 	// init KEY loop
-	for (int i = 0; i < 4; ++i)
+	for (int n = 0; n < 4; ++n)
 	{
 		// Counter System
 		for (int i = 0; i < 8; ++i)
@@ -121,7 +121,7 @@ void _start()
 		{
 			if (start + i < end - 1)
 			{
-				//start[i] ^= ((char*)S)[i];
+				start[i] ^= ((char*)S)[i];
 			}
 			else
 			{
