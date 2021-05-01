@@ -26,25 +26,19 @@ static int dump_obj(t_env *env)
 	return (0);
 }
 
-static void inject_code(t_env *env)
+static void replace_addr(unsigned int *start, size_t len, unsigned int needle, unsigned int replace)
 {
 	size_t i = 0;
 	int j = 0;
 
-	size_t payload_size =  env->payload_size + JUMP_SIZE;
-
-	// replace entrypoint
-	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
-
-	// replace jmp addr in payload
-	for (i = 0; i < env->payload_size; ++i)
+	for (i = 0; i < len; ++i)
 	{
-		if (i * 8 < env->payload_size)// && ((char*)env->payload_content)[i] == 0x42)
+		if (i * 8 < len)
 		{
 			int found = 0;
 			for (j = 0; j < 8; ++j)
 			{
-				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == 0x42424242)
+				if (i * 8 + j + 4 < len && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)start)[i]))[j]) == needle)
 				{
 					found = 1;
 					break;
@@ -52,12 +46,38 @@ static void inject_code(t_env *env)
 			}
 			if (found)
 			{
-				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = env->entrypoint;
-				printf("Found jmp addr, replacing...\n");
+				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)start)[i]))[j]) = replace;
 				break;
+
 			}
 		}
 	}
+}
+
+static void inject_code(t_env *env)
+{
+	size_t payload_size =  env->payload_size + JUMP_SIZE;
+
+	// replace entrypoint
+	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
+
+	// replace start addr in payload
+	replace_addr(env->payload_content, env->payload_size, 0x39393939, env->entrypoint);
+	// replace end addr in payload
+	replace_addr(env->payload_content, env->payload_size, 0x40404040, env->entrypoint + env->text_size);
+	// replace key addr in payload
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)KEY << 32) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)KEY << 32) >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, *(long unsigned int*)KEY >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", *(long unsigned int*)KEY >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(KEY+8) << 32) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(KEY+8) << 32) >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(KEY+8)) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(KEY+8)) >> 32);
+	
+	// replace jmp addr in payload
+	replace_addr(env->payload_content, env->payload_size, 0x42424242, env->entrypoint);
+
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
@@ -67,6 +87,7 @@ static void inject_code(t_env *env)
 	{
 		env->inject_phdr->p_filesz += payload_size;
 		env->inject_phdr->p_memsz += payload_size;
+		env->inject_phdr->p_flags = PF_R | PF_W | PF_X;
 	}
 	else
 	{
@@ -77,7 +98,7 @@ static void inject_code(t_env *env)
 		env->inject_phdr->p_vaddr = env->inject_addr;
 		env->inject_phdr->p_filesz = payload_size;
 		env->inject_phdr->p_memsz = payload_size;
-		env->inject_phdr->p_flags = PF_R | PF_X;
+		env->inject_phdr->p_flags = PF_R | PF_W | PF_X;
 		env->inject_phdr->p_align = 0x1000;
 		// set the new injected shdr
 		env->inject_shdr->sh_type = SHT_PROGBITS;
@@ -237,11 +258,11 @@ static int 		handle_obj(t_env *env)
 	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size + JUMP_SIZE);
 
 	// encrypt .text
-	/*if (rabbit_encrypt(env, KEY, IV))
+	if (rabbit_encrypt(env, KEY, IV))
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}*/
+	}
 	
 	// save new obj
 	dump_obj(env);

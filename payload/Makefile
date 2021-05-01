@@ -21,10 +21,10 @@ RM 		=	rm -rf
 all		:	$(NAME)
 
 $(NAME)	:	$(ASM) $(C) $(C_OBJ)
-	nasm -f elf64 $(ASM) -o $(NAME).o
-	ld $(NAME).o -o $(NAME)
+	#nasm -f elf64 $(ASM) -o $(NAME).o
+	#ld $(NAME).o -o $(NAME)
 	#ld $(C_OBJ) $(NAME).o -o $(NAME)
-	#ld -shared -fstack-protector $(C_OBJ) -o $(NAME)
+	ld -shared -fstack-protector $(C_OBJ) -o $(NAME)
 
 clean	:
 	$(RM) $(NAME).o

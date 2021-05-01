@@ -14,13 +14,9 @@
 
 #define LSW(n) (n << 8) >> 8
 #define MSW(n) (n >> 8) << 8
+#define FG(a, b) LSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE)) ^ MSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE))
 
-static unsigned int g(unsigned int a, unsigned int b)
-{
-	return LSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE)) ^ MSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE));
-}
-
-static unsigned int *rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsigned int *X, unsigned int *b)
+static void rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsigned int *X, unsigned int *b)
 {
 	// Counter System
 	for (int i = 0; i < 8; ++i)
@@ -34,7 +30,7 @@ static unsigned int *rabbit_round(unsigned int *C, unsigned int *A, unsigned int
 	for (int i = 0; i < 4; ++i)
 	{
 		for (int j = 0; j < 8; ++j)
-			G[j] = g(X[j], C[j]);
+			G[j] = FG(X[j], C[j]);
 
 		X[0] = G[0] + (G[7] << 16) + (G[6] << 16) % WORDSIZE;
 		X[1] = G[1] + (G[0] <<  8) +  G[7]        % WORDSIZE;
@@ -45,7 +41,6 @@ static unsigned int *rabbit_round(unsigned int *C, unsigned int *A, unsigned int
 		X[6] = G[6] + (G[5] << 16) + (G[4] << 16) % WORDSIZE;
 		X[7] = G[7] + (G[6] <<  8) +  G[5]        % WORDSIZE;
 	}
-	return X;
 }
 
 int rabbit_encrypt(t_env *env, char *key, char *iv)
@@ -102,7 +97,8 @@ int rabbit_encrypt(t_env *env, char *key, char *iv)
 		rabbit_round(C, A, G, X, &b);
 	}
 
-	// IV Setup Scheme
+	(void)iv;
+	/*// IV Setup Scheme
 	C[0] = C[0] ^ ((unsigned int *)iv)[0];
 	C[1] = C[1] ^ (((short *)iv)[5] | ((short *)iv)[2]);
 	C[2] = C[2] ^ ((unsigned int *)iv)[4];
@@ -116,7 +112,7 @@ int rabbit_encrypt(t_env *env, char *key, char *iv)
 	for (int i = 0; i < 4; ++i)
 	{
 		rabbit_round(C, A, G, X, &b);
-	}
+	}*/
 
 	// main loop
 	int done = 0;

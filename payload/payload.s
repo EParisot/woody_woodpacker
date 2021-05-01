@@ -11,6 +11,9 @@ _start:
 	push r9
 	push r11
 
+	;// TODO decrypt text
+	
+
 	mov rax, qword "...."
 	push rax
 	mov rax, 1       	 ; //write(

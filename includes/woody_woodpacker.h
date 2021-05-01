@@ -29,8 +29,8 @@
 #define JUMP_SIZE 9
 #define PAGE_OFFSET 0x1000
 
-#define KEY "shqs8N674çzqiàis"
-#define IV "gs6SHzèf"
+#define KEY "aaaabbbbccccdddd"
+#define IV "iviviviv"
 #define WORDSIZE 0x100000000
 
 
