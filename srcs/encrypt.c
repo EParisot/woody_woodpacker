@@ -43,7 +43,7 @@ static void rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsi
 	}
 }
 
-int rabbit_encrypt(t_env *env, char *key, char *iv)
+int rabbit_encrypt(t_env *env, char *key)
 {
 	unsigned int 	X[8];
 	unsigned int 	C[8];
@@ -96,23 +96,6 @@ int rabbit_encrypt(t_env *env, char *key, char *iv)
 	{
 		rabbit_round(C, A, G, X, &b);
 	}
-
-	(void)iv;
-	/*// IV Setup Scheme
-	C[0] = C[0] ^ ((unsigned int *)iv)[0];
-	C[1] = C[1] ^ (((short *)iv)[5] | ((short *)iv)[2]);
-	C[2] = C[2] ^ ((unsigned int *)iv)[4];
-	C[3] = C[3] ^ (((short *)iv)[4] | ((short *)iv)[0]);
-	C[4] = C[4] ^ ((unsigned int *)iv)[0];
-	C[5] = C[5] ^ (((short *)iv)[5] | ((short *)iv)[2]);
-	C[6] = C[6] ^ ((unsigned int *)iv)[4];
-	C[7] = C[7] ^ (((short *)iv)[4] | ((short *)iv)[0]);
-
-	// init IV loop
-	for (int i = 0; i < 4; ++i)
-	{
-		rabbit_round(C, A, G, X, &b);
-	}*/
 
 	// main loop
 	int done = 0;

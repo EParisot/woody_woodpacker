@@ -21,7 +21,7 @@ static int dump_obj(t_env *env)
 		printf("Error %d creating 'woody' file.\n", fd);
 		return (-1);
 	}
-	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->obj_size + env->payload_size + JUMP_SIZE + PAGE_OFFSET);
+	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->obj_size + env->payload_size + env->page_offset);
 	close(fd);
 	return (0);
 }
@@ -56,7 +56,7 @@ static void replace_addr(unsigned int *start, size_t len, unsigned int needle, u
 
 static void inject_code(t_env *env)
 {
-	size_t payload_size =  env->payload_size + JUMP_SIZE;
+	size_t payload_size =  env->payload_size;
 
 	// replace entrypoint
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
@@ -110,17 +110,17 @@ static void inject_code(t_env *env)
 	}
 }
 
-unsigned int find_code_cave(unsigned char *start, unsigned int end, unsigned int code_size) // TODO check payload size fits in cave
+unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size) // TODO check payload size fits in cave
 {
 	unsigned int code_cave = 0;
 	unsigned int best = 0;
 	size_t i = 0;
 	static size_t max;
 
-	while(code_cave < end) 
+	while(code_cave < size) 
 	{
 		i = 0;
-		while(code_cave + i < end && start[code_cave + i] == 0)
+		while(code_cave + i < size && start[code_cave + i] == 0)
 		{
 			++i;
 		}
@@ -175,7 +175,7 @@ int parse_elf(t_env *env)
 		{	
 			if (i + 1 < phnum)
 			{
-				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i+1].p_offset, env->payload_size + JUMP_SIZE);
+				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i].p_align, env->payload_size);
 				
 				// DEBUG force file injection at end
 				//env->inject_offset = 0;
@@ -196,7 +196,7 @@ int parse_elf(t_env *env)
 			if (env->found_code_cave == 0)
 			{
 				env->inject_phdr = &(phdr[i]);
-				env->inject_offset = env->obj_size + PAGE_OFFSET;
+				env->inject_offset = env->obj_size + env->page_offset;
 				env->inject_addr = env->inject_offset + env->obj_base;
 			}
 			break;
@@ -233,17 +233,28 @@ int parse_elf(t_env *env)
 	return 0;
 }
 
+void get_page_offset(t_env *env)
+{
+	int i = 0;
+
+	while ((env->obj_size + i) % 0x1000 != 0)
+		++i;
+	env->page_offset = i;
+}
+
 static int 		handle_obj(t_env *env)
 {
 	build_payload(env);
 
+	get_page_offset(env);
+
 	// copy original file
-	if ((env->obj_cpy = malloc(env->obj_size + env->payload_size + JUMP_SIZE + PAGE_OFFSET)) == NULL)
+	if ((env->obj_cpy = malloc(env->obj_size + env->page_offset + env->payload_size)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
 		return 1;
 	}
-	ft_bzero(env->obj_cpy, env->obj_size + env->payload_size + JUMP_SIZE + PAGE_OFFSET);
+	ft_bzero(env->obj_cpy, env->obj_size + env->page_offset + env->payload_size);
 	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
 	
 	// get .text content
@@ -255,10 +266,10 @@ static int 		handle_obj(t_env *env)
 		
 	inject_code(env);
 	//printf("DEBUG injected code:");
-	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size + JUMP_SIZE);
+	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size);
 
 	// encrypt .text
-	if (rabbit_encrypt(env, KEY, IV))
+	if (rabbit_encrypt(env, KEY))
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
@@ -307,6 +318,7 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->entrypoint = 0;
 		env->inject_offset = 0;
 		env->inject_addr = 0;
+		env->page_offset = 0;
 		env->inject_phdr = NULL;
 		env->inject_shdr = NULL;
 		if (hdr[5] == 1)

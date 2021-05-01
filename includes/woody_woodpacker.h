@@ -26,8 +26,6 @@
 
 
 #define PAYLOAD_SRC "payload/payload"
-#define JUMP_SIZE 9
-#define PAGE_OFFSET 0x1000
 
 #define KEY "aaaabbbbccccdddd"
 #define IV "iviviviv"
@@ -47,6 +45,7 @@ typedef struct s_env
 	Elf64_Phdr 		*inject_phdr;
 	Elf64_Shdr 		*inject_shdr;
 	unsigned int 	entrypoint;
+	unsigned int    page_offset;
 	char			*text_addr;
 	size_t 			text_size;
 	int   			found_code_cave;
@@ -63,6 +62,6 @@ void 			debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p);
 void 			debug_phdr(Elf64_Phdr phdr, char *label);
 
 int 			build_payload(t_env *env);
-int 			rabbit_encrypt(t_env *env, char *key, char *iv);
+int 			rabbit_encrypt(t_env *env, char *key);
 
 #endif

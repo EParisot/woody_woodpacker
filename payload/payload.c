@@ -15,7 +15,7 @@ void _start()
 	"push %r11 \n"
 	);
 
-	unsigned int *start = (void*)0x39393939; 	// start .text to be replaced
+	unsigned char *start = (void*)0x39393939; 	// start .text to be replaced
 	unsigned int *end = (void*)0x40404040; 		// end .text to be replaced
 	char key[16] = "AAAAAAAAAAAAAAAA";			// key to be replaced
 
@@ -104,7 +104,8 @@ void _start()
 	}
 
 	int done = 0;
-	while (!done && start < end - 1)
+	int str_c = 0;
+	while (!done && (unsigned int *)start < end - 1)
 	{
 		S[0] = ((short *)X)[0] ^ ((short *)X)[11];
 		S[1] = ((short *)X)[1] ^ ((short *)X)[6];
@@ -116,12 +117,12 @@ void _start()
 		S[7] = ((short *)X)[13] ^ ((short *)X)[2];
 
 		// encrypt
-		int i = 0;
-		for (i = 0; i < 16; ++i)
+		int n = 0;
+		for (n = 0; n < 16; ++n)
 		{
-			if (start + i < end - 1)
+			if (str_c + n < (unsigned char*)end - start)
 			{
-				start[i] ^= ((char*)S)[i];
+				start[str_c + n] ^= ((char*)S)[n];
 			}
 			else
 			{
@@ -129,7 +130,7 @@ void _start()
 				break;
 			}
 		}
-		start += i;
+		str_c += n;
 		
 		// Counter System
 		for (int i = 0; i < 8; ++i)
