@@ -110,7 +110,7 @@ static void inject_code(t_env *env)
 	}
 }
 
-unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size) // TODO check payload size fits in cave
+unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size)
 {
 	unsigned int code_cave = 0;
 	unsigned int best = 0;
@@ -217,7 +217,7 @@ int parse_elf(t_env *env)
 		// get build id
 		if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.gnu.build-id"))
 		{
-			// TODO init KEY an IV
+			// TODO init KEY
 		}
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))

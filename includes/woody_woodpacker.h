@@ -28,7 +28,6 @@
 #define PAYLOAD_SRC "payload/payload"
 
 #define KEY "aaaabbbbccccdddd"
-#define IV "iviviviv"
 #define WORDSIZE 0x100000000
 
 

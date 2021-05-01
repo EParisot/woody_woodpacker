@@ -156,6 +156,17 @@ void _start()
 			X[7] = G[7] + (G[6] <<  8) +  G[5]        % WORDSIZE;
 		}
 	}
+
+	// print "....WOODY....\n\0"
+	char str[16] = "....WOODY....\n\0";
+	__asm__(
+		"mov $1, %%rax \n"       	//write(
+		"mov $1, %%rdi \n"       	//  STDOUT_FILENO,
+		"mov %0, %%rsi \n"     	 	//  buf,
+		"mov $16, %%rdx \n"   		//  strlen(buf)
+		"syscall \n"        	 	//);
+		:: "c" (str)
+	);
 	
 	__asm__(
 	"pop %r11 \n"				 // restore used registers
