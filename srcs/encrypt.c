@@ -43,7 +43,7 @@ static void rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsi
 	}
 }
 
-int rabbit_encrypt(t_env *env, char *key)
+int rabbit_encrypt(t_env *env, unsigned char *key)
 {
 	unsigned int 	X[8];
 	unsigned int 	C[8];

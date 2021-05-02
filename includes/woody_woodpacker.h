@@ -41,9 +41,10 @@ typedef struct s_env
 	unsigned int    inject_addr;
 	Elf64_Phdr 		*inject_phdr;
 	Elf64_Shdr 		*inject_shdr;
+	Elf64_Phdr		*text_phdr;
 	unsigned int 	entrypoint;
 	unsigned int    page_offset;
-	char 			key[17];
+	unsigned char	key[17];
 	char			*text_addr;
 	size_t 			text_size;
 	unsigned int    text_offset;
@@ -61,6 +62,6 @@ void 			debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p);
 void 			debug_phdr(Elf64_Phdr phdr, char *label);
 
 int 			build_payload(t_env *env);
-int 			rabbit_encrypt(t_env *env, char *key);
+int 			rabbit_encrypt(t_env *env, unsigned char *key);
 
 #endif

@@ -86,6 +86,8 @@ static void inject_code(t_env *env)
 	}
 	else
 	{
+		// set the .text header rights too
+		env->text_phdr->p_flags = PF_R | PF_W | PF_X;
 		// set the new injected phdr
 		env->inject_phdr->p_type = PT_LOAD;
 		env->inject_phdr->p_offset = env->inject_offset;
@@ -173,7 +175,7 @@ static int parse_elf(t_env *env)
 				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i].p_align, env->payload_size);
 				
 				// DEBUG force file injection at end
-				//env->inject_offset = 0;
+				env->inject_offset = 0;
 				
 				if (env->inject_offset != 0)
 				{
@@ -181,6 +183,10 @@ static int parse_elf(t_env *env)
 					env->inject_addr = env->inject_offset + env->obj_base;
 					env->found_code_cave = 1;
 					env->inject_phdr = &(phdr[i]);
+				}
+				else 
+				{
+					env->text_phdr = &(phdr[i]);
 				}
 			}
 		}
@@ -241,11 +247,21 @@ static int generate_key(t_env *env)
 	return 0;
 }
 
-void get_key(t_env *env)
+/*static void get_key(t_env *env)
 {
 	ft_memcpy(env->key, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x3e), 8);
 	ft_memcpy(env->key + 8, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x48), 8);
 	env->key[16] = 0;
+}*/
+
+static void print_key(t_env *env)
+{
+	printf("key_value:");
+	for (size_t i = 0; i < 16; ++i)
+	{
+		printf("\\x%02x", env->key[i]);
+	}
+	printf("\n");
 }
 
 static int 		handle_obj(t_env *env)
@@ -271,7 +287,7 @@ static int 		handle_obj(t_env *env)
 	}
 
 	// check if already encrypted
-	if (env->entrypoint != env->text_offset)
+	/*if (env->entrypoint != env->text_offset)
 	{
 		printf("Already encrypted binary, bypassing.\n");
 
@@ -281,11 +297,10 @@ static int 		handle_obj(t_env *env)
 		// find key
 		get_key(env);
 
-		// print key
-		printf("key_value: %s\n", env->key);
+		print_key(env);
 	}
 	else
-	{
+	{*/
 		printf("Original entrypoint: \t%08x\n", env->entrypoint);
 		printf("Inserted entrypoint: \t%08x\n", env->inject_addr);
 
@@ -297,8 +312,7 @@ static int 		handle_obj(t_env *env)
 		}
 		//ft_memcpy(env->key, "aaaabbbbccccdddd\0", 17);
 
-		// print key
-		printf("key_value: %s\n", env->key);
+		print_key(env);	
 		
 		inject_code(env);
 
@@ -311,7 +325,7 @@ static int 		handle_obj(t_env *env)
 		
 		// save new obj
 		dump_obj(env);
-	}
+	//}
 
 	return 0;
 }
@@ -358,6 +372,7 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->page_offset = 0;
 		env->inject_phdr = NULL;
 		env->inject_shdr = NULL;
+		env->text_phdr = NULL;
 		if (hdr[5] == 1)
 			env->cpu = 1;
 		else
