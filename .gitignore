@@ -2,6 +2,7 @@ woody
 woody_woodpacker
 payload/payload
 ressources/sample64
+ressources/sample_args
 
 # Prerequisites
 *.d

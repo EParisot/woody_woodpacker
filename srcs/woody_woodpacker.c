@@ -286,46 +286,31 @@ static int 		handle_obj(t_env *env)
 		return 1;
 	}
 
-	// check if already encrypted
-	/*if (env->entrypoint != env->text_offset)
+	printf("Original entrypoint: \t%08x\n", env->entrypoint);
+	printf("Inserted entrypoint: \t%08x\n", env->inject_addr);
+
+	// generate Key
+	if (generate_key(env))
 	{
-		printf("Already encrypted binary, bypassing.\n");
-
-		printf("Original entrypoint: \t%08x\n", env->text_offset);
-		printf("Inserted entrypoint: \t%08x\n", env->entrypoint);
-
-		// find key
-		get_key(env);
-
-		print_key(env);
+		printf("Error generating key.\n");
+		return 1;
 	}
-	else
-	{*/
-		printf("Original entrypoint: \t%08x\n", env->entrypoint);
-		printf("Inserted entrypoint: \t%08x\n", env->inject_addr);
+	//ft_memcpy(env->key, "aaaabbbbccccdddd\0", 17);
 
-		// generate Key
-		if (generate_key(env))
-		{
-			printf("Error generating key.\n");
-			return 1;
-		}
-		//ft_memcpy(env->key, "aaaabbbbccccdddd\0", 17);
+	print_key(env);	
+	
+	inject_code(env);
 
-		print_key(env);	
-		
-		inject_code(env);
+	// encrypt .text
+	if (rabbit_encrypt(env, env->key))						//ENCRYPT
+	{
+		printf("Error encrypting elf.\n");
+		return 1;
+	}
+	
+	// save new obj
+	dump_obj(env);
 
-		// encrypt .text
-		if (rabbit_encrypt(env, env->key))
-		{
-			printf("Error encrypting elf.\n");
-			return 1;
-		}
-		
-		// save new obj
-		dump_obj(env);
-	//}
 
 	return 0;
 }

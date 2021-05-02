@@ -7,9 +7,12 @@ void _start()
 {
 	__asm__(
 
-	"push %rax \n"			 // save used registers
+	"push %rax \n"
+	"push %rbp \n"
+	"push %rsp \n"			 // save registers
 	"push %rdi \n"
 	"push %rsi \n"
+	"push %rcx \n"
 	"push %rdx \n"
 	"push %r9 \n"
 	"push %r11 \n"
@@ -122,7 +125,7 @@ void _start()
 		{
 			if (str_c + n < (unsigned char*)end - start)
 			{
-				start[str_c + n] ^= ((char*)S)[n];
+				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
 			}
 			else
 			{
@@ -172,8 +175,11 @@ void _start()
 	"pop %r11 \n"				 // restore used registers
 	"pop %r9 \n"
 	"pop %rdx \n"
+	"pop %rcx \n"
 	"pop %rsi \n"
 	"pop %rdi \n"
+	"pop %rsp \n"
+	"pop %rbp \n"
 	"pop %rax \n"
 
 	"push $0x42424242 \n"	 // jump back to entrypoint to be replaced

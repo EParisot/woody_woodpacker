@@ -14,12 +14,15 @@ NAME	=	sample
 
 SRCS	=	sample.c
 
+SRCS_ARGS	=	sample_args.c
+
 RM 		=	rm -rf
 
 all		:	$(NAME)
 
-$(NAME)	:	$(OBJS)
+$(NAME)	:	$(SRCS) $(SRCS_ARGS)
 	clang -m64 $(SRCS) -o $(NAME)64
+	clang -m64 $(SRCS_ARGS) -o $(NAME)_args
 
 clean	:
 	$(RM) $(NAME)64
