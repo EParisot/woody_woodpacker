@@ -26,8 +26,6 @@
 
 
 #define PAYLOAD_SRC "payload/payload"
-
-#define KEY "aaaabbbbccccdddd"
 #define WORDSIZE 0x100000000
 
 
@@ -45,6 +43,7 @@ typedef struct s_env
 	Elf64_Shdr 		*inject_shdr;
 	unsigned int 	entrypoint;
 	unsigned int    page_offset;
+	char 			key[17];
 	char			*text_addr;
 	size_t 			text_size;
 	int   			found_code_cave;

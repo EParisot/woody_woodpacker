@@ -135,7 +135,7 @@ int rabbit(char *input, char *key, char *iv)
 			if (str_c + i < strlen(input))
 			{
 				unsigned char res = input[str_c + i] ^ ((char *)S)[i];
-				printf("%02x ", res);
+				printf("x%02x", res);
 			}
 			else
 			{

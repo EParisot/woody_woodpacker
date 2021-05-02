@@ -66,14 +66,14 @@ static void inject_code(t_env *env)
 	// replace end addr in payload
 	replace_addr(env->payload_content, env->payload_size, 0x40404040, env->entrypoint + env->text_size);
 	// replace key addr in payload
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)KEY << 32) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)KEY << 32) >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, *(long unsigned int*)KEY >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", *(long unsigned int*)KEY >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(KEY+8) << 32) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(KEY+8) << 32) >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(KEY+8)) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(KEY+8)) >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)env->key << 32) >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, *(long unsigned int*)env->key >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", *(long unsigned int*)env->key >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(env->key+8) << 32) >> 32);
+	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
+	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
 	replace_addr(env->payload_content, env->payload_size, 0x42424242, env->entrypoint);
@@ -110,7 +110,7 @@ static void inject_code(t_env *env)
 	}
 }
 
-unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size)
+static unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size)
 {
 	unsigned int code_cave = 0;
 	unsigned int best = 0;
@@ -141,7 +141,7 @@ unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned in
 	return (best);
 }
 
-int parse_elf(t_env *env) 
+static int parse_elf(t_env *env) 
 {
 	// get obj header
 	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)env->obj_cpy;
@@ -214,11 +214,6 @@ int parse_elf(t_env *env)
 			}
 			continue;
 		}
-		// get build id
-		if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.gnu.build-id"))
-		{
-			// TODO init KEY
-		}
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
@@ -226,20 +221,22 @@ int parse_elf(t_env *env)
 			env->text_addr = (char*)env->obj_cpy + shdr[i].sh_offset;
 		}
   	}
-
-	printf("Original entrypoint: \t%08x\n", env->entrypoint);
-	printf("New entrypoint: \t%08x\n", env->inject_addr);
-
 	return 0;
 }
 
-void get_page_offset(t_env *env)
+static void get_page_offset(t_env *env)
 {
 	int i = 0;
 
 	while ((env->obj_size + i) % 0x1000 != 0)
 		++i;
 	env->page_offset = i;
+}
+
+static void generate_key(t_env *env)
+{
+	char key[17] = "aaaabbbbccccdddd\0";
+	ft_memcpy(env->key, key, 17);
 }
 
 static int 		handle_obj(t_env *env)
@@ -263,13 +260,21 @@ static int 		handle_obj(t_env *env)
 		printf("Error parsing elf.\n");
 		return 1;
 	}
+
+	printf("Original entrypoint: \t%08x\n", env->entrypoint);
+	printf("New entrypoint: \t%08x\n", env->inject_addr);
+
+	// TODO generate Key
+	generate_key(env);
+	// print key
+	printf("key_value: %s\n", env->key);
 		
 	inject_code(env);
 	//printf("DEBUG injected code:");
 	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size);
 
 	// encrypt .text
-	if (rabbit_encrypt(env, KEY))
+	if (rabbit_encrypt(env, env->key))
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
