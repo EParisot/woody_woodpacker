@@ -67,17 +67,12 @@ static void inject_code(t_env *env)
 	replace_addr(env->payload_content, env->payload_size, 0x40404040, env->entrypoint + env->text_size);
 	// replace key addr in payload
 	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)env->key << 32) >> 32);
 	replace_addr(env->payload_content, env->payload_size, 0x41414141, *(long unsigned int*)env->key >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", *(long unsigned int*)env->key >> 32);
 	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(env->key+8) << 32) >> 32);
 	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
-	//printf("replaced 0x41414141 by %08lx\n", (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
 	replace_addr(env->payload_content, env->payload_size, 0x42424242, env->entrypoint);
-
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
@@ -219,6 +214,7 @@ static int parse_elf(t_env *env)
 		{
 			env->text_size = shdr[i].sh_size;
 			env->text_addr = (char*)env->obj_cpy + shdr[i].sh_offset;
+			env->text_offset = shdr[i].sh_offset + env->obj_base;
 		}
   	}
 	return 0;
@@ -233,10 +229,23 @@ static void get_page_offset(t_env *env)
 	env->page_offset = i;
 }
 
-static void generate_key(t_env *env)
+static int generate_key(t_env *env)
 {
-	char key[17] = "aaaabbbbccccdddd\0";
-	ft_memcpy(env->key, key, 17);
+	int fd = 0;
+
+	if ((fd = open("/dev/urandom", O_RDONLY)) < 0)
+		return 1;
+	if (read(fd, env->key, 16) < 0)
+		return 1;
+	env->key[16] = 0;
+	return 0;
+}
+
+void get_key(t_env *env)
+{
+	ft_memcpy(env->key, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x3e), 8);
+	ft_memcpy(env->key + 8, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x48), 8);
+	env->key[16] = 0;
 }
 
 static int 		handle_obj(t_env *env)
@@ -261,27 +270,49 @@ static int 		handle_obj(t_env *env)
 		return 1;
 	}
 
-	printf("Original entrypoint: \t%08x\n", env->entrypoint);
-	printf("New entrypoint: \t%08x\n", env->inject_addr);
-
-	// TODO generate Key
-	generate_key(env);
-	// print key
-	printf("key_value: %s\n", env->key);
-		
-	inject_code(env);
-	//printf("DEBUG injected code:");
-	//debug_dump(env, env->obj_cpy + env->inject_offset, env->inject_addr, env->payload_size);
-
-	// encrypt .text
-	if (rabbit_encrypt(env, env->key))
+	// check if already encrypted
+	if (env->entrypoint != env->text_offset)
 	{
-		printf("Error encrypting elf.\n");
-		return 1;
+		printf("Already encrypted binary, bypassing.\n");
+
+		printf("Original entrypoint: \t%08x\n", env->text_offset);
+		printf("Inserted entrypoint: \t%08x\n", env->entrypoint);
+
+		// find key
+		get_key(env);
+
+		// print key
+		printf("key_value: %s\n", env->key);
 	}
-	
-	// save new obj
-	dump_obj(env);
+	else
+	{
+		printf("Original entrypoint: \t%08x\n", env->entrypoint);
+		printf("Inserted entrypoint: \t%08x\n", env->inject_addr);
+
+		// generate Key
+		if (generate_key(env))
+		{
+			printf("Error generating key.\n");
+			return 1;
+		}
+		//ft_memcpy(env->key, "aaaabbbbccccdddd\0", 17);
+
+		// print key
+		printf("key_value: %s\n", env->key);
+		
+		inject_code(env);
+
+		// encrypt .text
+		if (rabbit_encrypt(env, env->key))
+		{
+			printf("Error encrypting elf.\n");
+			return 1;
+		}
+		
+		// save new obj
+		dump_obj(env);
+	}
+
 	return 0;
 }
 
@@ -320,6 +351,7 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->found_code_cave = 0;
 		env->text_size = 0;
 		env->text_addr = NULL;
+		env->text_offset = 0;
 		env->entrypoint = 0;
 		env->inject_offset = 0;
 		env->inject_addr = 0;

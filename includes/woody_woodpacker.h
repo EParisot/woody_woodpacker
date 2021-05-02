@@ -46,6 +46,7 @@ typedef struct s_env
 	char 			key[17];
 	char			*text_addr;
 	size_t 			text_size;
+	unsigned int    text_offset;
 	int   			found_code_cave;
 	u_int8_t 		cpu;
 }				t_env;
