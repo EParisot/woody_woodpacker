@@ -175,7 +175,7 @@ static int parse_elf(t_env *env)
 				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i].p_align, env->payload_size);
 				
 				// DEBUG force file injection at end
-				env->inject_offset = 0;
+				//env->inject_offset = 0;
 				
 				if (env->inject_offset != 0)
 				{
