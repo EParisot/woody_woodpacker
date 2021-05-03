@@ -6,16 +6,22 @@
 void _start()
 {
 	__asm__(
-
+	// save registers
 	"push %rax \n"
-	"push %rbp \n"
-	"push %rsp \n"			 // save registers
-	"push %rdi \n"
-	"push %rsi \n"
 	"push %rcx \n"
 	"push %rdx \n"
+	"push %rbx \n"
+	"push %rsi \n"
+	"push %rdi \n"
+	"push %rbp \n"
+	"push %r8 \n"
 	"push %r9 \n"
+	"push %r10 \n"
 	"push %r11 \n"
+	"push %r12 \n"
+	"push %r13 \n"
+	"push %r14 \n"
+	"push %r15 \n"
 	);
 
 	unsigned char *start = (void*)0x39393939; 	// start .text to be replaced
@@ -172,17 +178,30 @@ void _start()
 	);
 	
 	__asm__(
-	"pop %r11 \n"				 // restore used registers
+	
+	// restore used registers
+	"pop %r15 \n"	
+	"pop %r14 \n"
+	"pop %r13 \n"
+	"pop %r12 \n"
+	"pop %r11 \n"				 
+	"pop %r10 \n"
 	"pop %r9 \n"
+	"pop %r8 \n"
+	"pop %rbp \n"
+	"pop %rdi \n"
+	"pop %rsi \n"
+	"pop %rbx \n"
 	"pop %rdx \n"
 	"pop %rcx \n"
-	"pop %rsi \n"
-	"pop %rdi \n"
-	"pop %rsp \n"
-	"pop %rbp \n"
 	"pop %rax \n"
 
-	"push $0x42424242 \n"	 // jump back to entrypoint to be replaced
-	"ret \n"
+	// come back to initial stack position
+	//"add $0x8, %rsp \n" // with empty injection (no C code and no print)
+	"add $0x148, %rsp \n"
+
+	// jump back to entrypoint to be replaced
+	"mov $0x42424242, %rax \n"	 
+	"jmp *%rax \n"
 	);
 }
