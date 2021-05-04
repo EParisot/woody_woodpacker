@@ -24,7 +24,7 @@ void _start()
 	"push %r15 \n"
 	);
 
-	unsigned char *start = (void*)0x39393939; 	// start .text to be replaced
+	/*unsigned char *start = (void*)0x39393939; 	// start .text to be replaced
 	unsigned int *end = (void*)0x40404040; 		// end .text to be replaced
 	char key[16] = "AAAAAAAAAAAAAAAA";			// key to be replaced
 
@@ -164,7 +164,7 @@ void _start()
 			X[6] = G[6] + (G[5] << 16) + (G[4] << 16) % WORDSIZE;
 			X[7] = G[7] + (G[6] <<  8) +  G[5]        % WORDSIZE;
 		}
-	}
+	}*/
 
 	// print "....WOODY....\n\0"
 	char str[16] = "....WOODY....\n\0";
@@ -198,12 +198,12 @@ void _start()
 
 	// come back to initial stack position
 	//"add $0x8, %rsp \n" // with empty injection (no C code and no print)
-	//"add $0x28, %rsp \n"// with only print injection
-	"add $0x148, %rsp \n"
+	"add $0x28, %rsp \n"// with only print injection
+	//"add $0x148, %rsp \n" // full injection
 
 	// jump back to entrypoint to be replaced
-	"mov $0x42424242, %rax \n"	 				// abs jmp
-	"jmp *%rax \n"
-	//"jmp *0x42424242 \n"
+	//"mov $0x42424242, %rax \n"	 				// abs jmp
+	//"jmp *%rax \n"
+	"jmp (0x00000000) \n" 							// relative jump
 	);
 }
