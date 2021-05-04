@@ -26,19 +26,19 @@ static int dump_obj(t_env *env)
 	return (0);
 }
 
-static void replace_addr(unsigned int *start, size_t len, unsigned int needle, unsigned int replace)
+static unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int replace)
 {
 	size_t i = 0;
 	int j = 0;
 
-	for (i = 0; i < len; ++i)
+	for (i = 0; i < env->payload_size; ++i)
 	{
-		if (i * 8 < len)
+		if (i * 8 < env->payload_size)
 		{
 			int found = 0;
 			for (j = 0; j < 8; ++j)
 			{
-				if (i * 8 + j + 4 < len && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)start)[i]))[j]) == needle)
+				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == needle)
 				{
 					found = 1;
 					break;
@@ -46,12 +46,13 @@ static void replace_addr(unsigned int *start, size_t len, unsigned int needle, u
 			}
 			if (found)
 			{
-				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)start)[i]))[j]) = replace;
+				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = replace;
 				break;
 
 			}
 		}
 	}
+	return (i * 8 + j);
 }
 
 static void inject_code(t_env *env)
@@ -60,19 +61,19 @@ static void inject_code(t_env *env)
 
 	// replace entrypoint
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
-
+	
 	// replace start addr in payload
-	replace_addr(env->payload_content, env->payload_size, 0x39393939, env->entrypoint);
+	replace_addr(env, 0x39393939, env->entrypoint);
 	// replace end addr in payload
-	replace_addr(env->payload_content, env->payload_size, 0x40404040, env->entrypoint + env->text_size);
+	replace_addr(env, 0x40404040, env->entrypoint + env->text_size);
 	// replace key addr in payload
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, *(long unsigned int*)env->key >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32);
-	replace_addr(env->payload_content, env->payload_size, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
+	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
-	replace_addr(env->payload_content, env->payload_size, 0x42424242, env->entrypoint);
+	replace_addr(env, 0x42424242, env->entrypoint);
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);

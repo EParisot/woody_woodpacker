@@ -198,10 +198,12 @@ void _start()
 
 	// come back to initial stack position
 	//"add $0x8, %rsp \n" // with empty injection (no C code and no print)
+	//"add $0x28, %rsp \n"// with only print injection
 	"add $0x148, %rsp \n"
 
 	// jump back to entrypoint to be replaced
-	"mov $0x42424242, %rax \n"	 
+	"mov $0x42424242, %rax \n"	 				// abs jmp
 	"jmp *%rax \n"
+	//"jmp *0x42424242 \n"
 	);
 }
