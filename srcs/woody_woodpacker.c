@@ -41,7 +41,7 @@ static unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int r
 				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == needle)
 				{
 					found = 1;
-					//printf("FOUND\n");
+					printf("FOUND\n");
 					break;
 				}
 			}
@@ -64,9 +64,9 @@ static void inject_code(t_env *env)
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 	
 	// replace start addr in payload
-	replace_addr(env, 0x39393939, env->entrypoint);
+	replace_addr(env, 0x39393939, env->entrypoint - env->obj_base);
 	// replace end addr in payload
-	replace_addr(env, 0x40404040, env->entrypoint + env->text_size);
+	replace_addr(env, 0x40404040, env->entrypoint + env->text_size - env->obj_base);
 	// replace key addr in payload
 	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
 	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32);
@@ -254,13 +254,6 @@ static int generate_key(t_env *env)
 	env->key[16] = 0;
 	return 0;
 }
-
-/*static void get_key(t_env *env)
-{
-	ft_memcpy(env->key, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x3e), 8);
-	ft_memcpy(env->key + 8, (char*)(env->obj_cpy + env->entrypoint - env->obj_base + 0x48), 8);
-	env->key[16] = 0;
-}*/
 
 static void print_key(t_env *env)
 {

@@ -24,8 +24,16 @@ void _start()
 	"push %r15 \n"
 	);
 
-	/*unsigned char *start = (void*)0x39393939; 	// start .text to be replaced
-	unsigned int *end = (void*)0x40404040; 		// end .text to be replaced
+	unsigned char *start = 0;//(void*)0x39393939; 	// start .text to be replaced
+	__asm__(
+		"mov . + 7 + 0x39393939(%%rip), %0 \n"
+		:: "c" (start)
+	);
+	unsigned int *end = 0;//(void*)0x40404040; 		// end .text to be replaced
+	__asm__(
+		"mov . + 7 + 0x40404040(%%rip), %0 \n"
+		:: "c" (end)
+	);
 	char key[16] = "AAAAAAAAAAAAAAAA";			// key to be replaced
 
 	unsigned int 	X[8];
@@ -125,13 +133,14 @@ void _start()
 		S[6] = ((short *)X)[12] ^ ((short *)X)[7];
 		S[7] = ((short *)X)[13] ^ ((short *)X)[2];
 
-		// encrypt
+		// decrypt
 		int n = 0;
 		for (n = 0; n < 16; ++n)
 		{
 			if (str_c + n < (unsigned char*)end - start)
 			{
-				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
+				//start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
+				start[str_c + n] = start[str_c + n];
 			}
 			else
 			{
@@ -164,7 +173,7 @@ void _start()
 			X[6] = G[6] + (G[5] << 16) + (G[4] << 16) % WORDSIZE;
 			X[7] = G[7] + (G[6] <<  8) +  G[5]        % WORDSIZE;
 		}
-	}*/
+	}
 
 	// print "....WOODY....\n\0"
 	char str[16] = "....WOODY....\n\0";
@@ -198,8 +207,8 @@ void _start()
 
 	// come back to initial stack position
 	//"add $0x8, %rsp \n" // with empty injection (no C code and no print)
-	"add $0x28, %rsp \n"// with only print injection
-	//"add $0x148, %rsp \n" // full injection
+	//"add $0x28, %rsp \n"// with only print injection
+	"add $0x148, %rsp \n" // full injection
 
 	// jump back to entrypoint to be replaced
 	//"mov $0x42424242, %rax \n"	 				// abs jmp
