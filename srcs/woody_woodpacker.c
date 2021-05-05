@@ -74,7 +74,7 @@ static void inject_code(t_env *env)
 	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
-	replace_addr(env, 0x42424242, - (env->text_size - 0x24) - (env->payload_size + 0x17));
+	replace_addr(env, 0x42424242, - (env->text_size - 0x24) - env->inject_dist - (env->payload_size + 0x17));
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
@@ -223,6 +223,12 @@ static int parse_elf(t_env *env)
 			env->text_size = shdr[i].sh_size;
 			env->text_addr = (char*)env->obj_cpy + shdr[i].sh_offset;
 			env->text_offset = shdr[i].sh_offset + env->obj_base;
+			// set dist between .text end and inject point
+			if (env->found_code_cave == 0)
+			{
+				//printf("test1: %x, %lx, %lx\n", env->inject_offset, env->entrypoint + env->text_size, env->inject_offset - (env->entrypoint + env->text_size));
+				env->inject_dist = env->inject_offset - (env->entrypoint + env->text_size);
+			}
 		}
   	}
 	return 0;
@@ -356,6 +362,7 @@ static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
 		env->entrypoint = 0;
 		env->inject_offset = 0;
 		env->inject_addr = 0;
+		env->inject_dist = 0;
 		env->page_offset = 0;
 		env->inject_phdr = NULL;
 		env->inject_shdr = NULL;

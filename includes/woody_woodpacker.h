@@ -39,6 +39,7 @@ typedef struct s_env
 	size_t 			payload_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
+	unsigned int  	inject_dist;
 	Elf64_Phdr 		*inject_phdr;
 	Elf64_Shdr 		*inject_shdr;
 	Elf64_Phdr		*text_phdr;
