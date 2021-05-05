@@ -204,6 +204,6 @@ void _start()
 	// jump back to entrypoint to be replaced
 	//"mov $0x42424242, %rax \n"	 				// abs jmp
 	//"jmp *%rax \n"
-	"jmp (0x00000000) \n" 							// relative jump
+	"jmp . + 5 + 0x42424242 \n" 							// relative jump
 	);
 }
