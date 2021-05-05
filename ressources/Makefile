@@ -21,8 +21,8 @@ RM 		=	rm -rf
 all		:	$(NAME)
 
 $(NAME)	:	$(SRCS) $(SRCS_ARGS)
-	clang -m64 $(SRCS) -o $(NAME)64
-	clang -m64 $(SRCS_ARGS) -o $(NAME)_args
+	gcc -m64 $(SRCS) -o $(NAME)64
+	gcc -m64 $(SRCS_ARGS) -o $(NAME)_args
 
 clean	:
 	$(RM) $(NAME)64

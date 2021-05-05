@@ -34,7 +34,7 @@ RM 		= 	rm -rf
 all		:	$(LIBS) $(NAME) $(PAYLOAD) $(RESSOURCES)
 
 $(NAME)	:	$(OBJS) $(INC)
-	clang $(CFLAGS) $(OBJS) $(LIBS) -o $(NAME)
+	gcc $(CFLAGS) $(OBJS) $(LIBS) -o $(NAME)
 
 $(LIBS)	: 	.FORCE
 	@$(MAKE) -C libft
