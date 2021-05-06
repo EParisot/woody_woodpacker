@@ -21,6 +21,8 @@ RM 		=	rm -rf
 all		:	$(NAME)
 
 $(NAME)	:	$(SRCS) $(SRCS_ARGS)
+	gcc -no-pie -m64 $(SRCS) -o $(NAME)64_no_pie
+	gcc -no-pie -m64 $(SRCS_ARGS) -o $(NAME)_args_no_pie
 	gcc -m64 $(SRCS) -o $(NAME)64
 	gcc -m64 $(SRCS_ARGS) -o $(NAME)_args
 
