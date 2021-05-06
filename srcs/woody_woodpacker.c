@@ -64,9 +64,9 @@ static void inject_code(t_env *env)
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
 	// replace start addr in payload
-	//replace_addr(env, 0x39393939, env->entrypoint - env->obj_base);
+	replace_addr(env, 0x39393939, env->entrypoint - env->obj_base);
 	// replace end addr in payload
-	replace_addr(env, 0x40404040, env->text_size - 0x24 + env->inject_dist);
+	replace_addr(env, 0x40404040, env->entrypoint - env->obj_base + env->text_size);
 	// replace key addr in payload
 	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
 	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32);

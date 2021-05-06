@@ -24,7 +24,20 @@ void _start()
 	"push %r15 \n"
 	);
 
-	unsigned int len = 0x40404040;
+	/*unsigned char *start = 0; 	// start .text to be replaced
+	__asm__(
+		"mov 0x39393939(%%rip), %0 \n"
+		:: "c" (start)
+	);
+	unsigned char *end = 0; 	// end .text to be replaced
+	__asm__(
+		"mov 0x40404040(%%rip), %0 \n"
+		:: "c" (end)
+	);*/
+
+	unsigned char *start = (void*)0x39393939;
+	unsigned char *end = (void*)0x40404040;
+
 	char key[16] = "AAAAAAAAAAAAAAAA";			// key to be replaced
 
 	unsigned int 	X[8];
@@ -126,18 +139,18 @@ void _start()
 
 		// decrypt
 		int n = 0;
-		for (n = 0; n < 16; ++n) // TODO rewrite this in ASM to use relative address
+		for (n = 0; n < 16; ++n)
 		{
-			//if (str_c + n < end - start)
-			//{
+			if (str_c + n < end - start)
+			{
 				//start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
 				//start[str_c + n] = start[str_c + n];
-			//}
-			//else
-			//{
+			}
+			else
+			{
 				done = 1;
 				break;
-			//}
+			}
 		}
 		str_c += n;
 		
