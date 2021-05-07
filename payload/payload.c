@@ -24,13 +24,16 @@ void _start()
 	"push %r15 \n"
 	);
 
-	unsigned char *start;						// start .text to be replaced
+	// start .text to be replaced
+	unsigned char *start;						
 	__asm__(
 		"lea 0x39393939(%%rip), %0 \n"
 		: "=p" (start)
 	);
-	int text_size = 0x40404040;					// .text len to be rplaced
-	char key[16] = "AAAAAAAAAAAAAAAA";			// key to be replaced
+	// .text len to be replaced
+	int text_size = 0x40404040;	
+	// key to be replaced				
+	char key[16] = "AAAAAAAAAAAAAAAA";			
 
 	unsigned int 	X[8];
 	unsigned int 	C[8];
@@ -136,7 +139,6 @@ void _start()
 			if (str_c + n < text_size)
 			{
 				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
-				//start[str_c + n] = start[str_c + n];
 			}
 			else
 			{

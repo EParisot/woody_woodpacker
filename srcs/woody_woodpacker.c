@@ -41,7 +41,6 @@ static unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int r
 				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == needle)
 				{
 					found = 1;
-					//printf("FOUND\n");
 					break;
 				}
 			}
@@ -226,7 +225,6 @@ static int parse_elf(t_env *env)
 			// set dist between .text end and inject point
 			if (env->found_code_cave == 0)
 			{
-				//printf("test1: %x, %lx, %lx\n", env->inject_offset, env->entrypoint + env->text_size, env->inject_offset - (env->entrypoint + env->text_size));
 				env->inject_dist = env->inject_offset - (env->entrypoint + env->text_size);
 			}
 		}
