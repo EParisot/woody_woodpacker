@@ -64,9 +64,9 @@ static void inject_code(t_env *env)
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
 	// replace start addr in payload
-	replace_addr(env, 0x39393939, env->entrypoint - env->obj_base);
-	// replace end addr in payload
-	replace_addr(env, 0x40404040, env->entrypoint - env->obj_base + env->text_size);
+	replace_addr(env, 0x39393939, - (env->text_size - 0x24) - env->inject_dist - 0x7f + 0xf);
+	// replace .text size in payload
+	replace_addr(env, 0x40404040, (int)env->text_size);
 	// replace key addr in payload
 	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
 	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32);
@@ -74,7 +74,7 @@ static void inject_code(t_env *env)
 	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
-	replace_addr(env, 0x42424242, - (env->text_size - 0x24) - env->inject_dist - (env->payload_size + 0x17));
+	replace_addr(env, 0x42424242, - (env->text_size - 0x24) - env->inject_dist - (env->payload_size + 0x1d));
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
@@ -303,11 +303,11 @@ static int 		handle_obj(t_env *env)
 	inject_code(env);
 
 	// encrypt .text
-	/*if (rabbit_encrypt(env, env->key))						//ENCRYPT
+	if (rabbit_encrypt(env, env->key))						//ENCRYPT
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}*/
+	}
 	
 	// save new obj
 	dump_obj(env);
