@@ -164,7 +164,6 @@ static int parse_elf(t_env *env)
 		// get base address
 		if (phdr[i].p_type == PT_LOAD && load_found == 0)
 		{
-			//debug_phdr(phdr[i], "FIRST_PT_LOAD");
 			env->obj_base = phdr[i].p_vaddr;
 			load_found = 1;
 		}
@@ -175,7 +174,7 @@ static int parse_elf(t_env *env)
 			{
 				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i].p_align, env->payload_size);
 				
-				// DEBUG force file injection at end
+				// DEBUG force file injection at end (PT_NOTE to PT_LOAD method)
 				//env->inject_offset = 0;
 				
 				if (env->inject_offset != 0)
@@ -194,7 +193,6 @@ static int parse_elf(t_env *env)
 		// get .note.* phdr if no code_cave found (so it will become the new injected phdr)
 		if (phdr[i].p_type == PT_NOTE)
 		{
-			//debug_phdr(phdr[i], "PT_NOTE");
 			if (env->found_code_cave == 0)
 			{
 				env->inject_phdr = &(phdr[i]);
@@ -209,7 +207,6 @@ static int parse_elf(t_env *env)
 		// get .note.ABI-tag shdr if no code_cave found (so it will become the new injected phdr)
 		if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.ABI-tag"))
 		{
-			//debug_shdr(shdr[i], "SHT_NOTE", sh_strtab_p);
 			if (env->found_code_cave == 0)
 			{
 				env->inject_shdr = &(shdr[i]);
@@ -309,7 +306,6 @@ static int 		handle_obj(t_env *env)
 	
 	// save new obj
 	dump_obj(env);
-
 
 	return 0;
 }
