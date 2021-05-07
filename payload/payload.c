@@ -24,7 +24,7 @@ void _start()
 	"push %r15 \n"
 	);
 
-	// start .text to be replaced
+	// start .text to be replaced (needs a relative address for PIE Exec => RIP relative and LEA mandatory)
 	unsigned char *start;						
 	__asm__(
 		"lea 0x39393939(%%rip), %0 \n"
@@ -208,9 +208,7 @@ void _start()
 	//"add $0x28, %rsp \n"// with only print injection
 	"add $0x148, %rsp \n" // full injection
 
-	// jump back to entrypoint to be replaced
-	//"mov $0x42424242, %rax \n"	 				// abs jmp
-	//"jmp *%rax \n"
-	"jmp . + 5 + 0x42424242 \n" 							// relative jump
+	// jump back to entrypoint to be replaced (needs to be relative too => RIP + 5 (sizeof jmp))
+	"jmp . + 5 + 0x42424242 \n"
 	);
 }

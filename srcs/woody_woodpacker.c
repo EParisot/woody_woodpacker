@@ -62,8 +62,8 @@ static void inject_code(t_env *env)
 	// replace entrypoint
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
-	// replace start addr in payload
-	replace_addr(env, 0x39393939, - (env->text_size - 0x24) - env->inject_dist - 0x7f + 0xf);
+	// replace start addr in payload (this is a negative offset)
+	replace_addr(env, 0x39393939, - env->text_size + 0x24 - env->inject_dist - 0x70);
 	// replace .text size in payload
 	replace_addr(env, 0x40404040, (int)env->text_size);
 	// replace key addr in payload
@@ -225,7 +225,7 @@ static int parse_elf(t_env *env)
 			// set dist between .text end and inject point
 			if (env->found_code_cave == 0)
 			{
-				env->inject_dist = env->inject_offset - (env->entrypoint + env->text_size);
+				env->inject_dist = env->obj_base + env->inject_offset - env->entrypoint - env->text_size - 0x10;
 			}
 		}
   	}
