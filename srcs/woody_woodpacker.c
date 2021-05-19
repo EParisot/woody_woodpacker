@@ -87,6 +87,7 @@ static void inject_code(t_env *env)
 	}
 	else
 	{
+		printf("Not enought place in PT_LOAD, injecting at end of file...\n");
 		// set the .text header rights too
 		env->text_phdr->p_flags = PF_R | PF_W | PF_X;
 		// set the new injected phdr
@@ -108,17 +109,22 @@ static void inject_code(t_env *env)
 	}
 }
 
-static unsigned int find_code_cave(unsigned char *start, unsigned int size, unsigned int code_size)
+/*static int find_code_cave(unsigned char *start, unsigned int size, unsigned int align, unsigned int code_size)
 {
 	unsigned int code_cave = 0;
-	unsigned int best = 0;
+	int best = -1;
 	size_t i = 0;
+	size_t j = 0;
 	static size_t max;
 
-	while(code_cave < size) 
+	while((size + j) % align)
+	{
+		++j;
+	}
+	while(code_cave < j) 
 	{
 		i = 0;
-		while(code_cave + i < size && start[code_cave + i] == 0)
+		while(code_cave + i < j && start[code_cave + i] == 0)
 		{
 			++i;
 		}
@@ -137,7 +143,7 @@ static unsigned int find_code_cave(unsigned char *start, unsigned int size, unsi
 		}
 	}
 	return (best);
-}
+}*/
 
 static int parse_elf(t_env *env) 
 {
@@ -168,26 +174,19 @@ static int parse_elf(t_env *env)
 			load_found = 1;
 		}
 		// find code cave in executable segment
-		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5)
-		{	
-			if (i + 1 < phnum)
+		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5 && i + 1 < phnum)
+		{
+			//env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset + phdr[i].p_memsz, phdr[i].p_memsz, phdr[i].p_align, env->payload_size);
+			if (phdr[i+1].p_offset - (phdr[i].p_offset + phdr[i].p_memsz) > env->payload_size)
 			{
-				env->inject_offset = find_code_cave(env->obj_cpy + phdr[i].p_offset, phdr[i].p_align, env->payload_size);
-				
-				// DEBUG force file injection at end (PT_NOTE to PT_LOAD method)
-				//env->inject_offset = 0;
-				
-				if (env->inject_offset != 0)
-				{
-					env->inject_offset += phdr[i].p_offset;
-					env->inject_addr = env->inject_offset + env->obj_base;
-					env->found_code_cave = 1;
-					env->inject_phdr = &(phdr[i]);
-				}
-				else 
-				{
-					env->text_phdr = &(phdr[i]);
-				}
+				env->inject_offset = phdr[i].p_offset + phdr[i].p_memsz;
+				env->inject_addr = env->inject_offset + env->obj_base;
+				env->found_code_cave = 1;
+				env->inject_phdr = &(phdr[i]);
+			}
+			else 
+			{
+				env->text_phdr = &(phdr[i]);
 			}
 		}
 		// get .note.* phdr if no code_cave found (so it will become the new injected phdr)
@@ -231,11 +230,9 @@ static int parse_elf(t_env *env)
 
 static void get_page_offset(t_env *env)
 {
-	int i = 0;
-
-	while ((env->obj_size + i) % 0x1000 != 0)
-		++i;
-	env->page_offset = i;
+	while ((env->obj_size + env->page_offset) % 0x1000 != 0)
+		++env->page_offset;
+	env->page_offset += 0x1000; // TODO avoid that SHIT !
 }
 
 static int generate_key(t_env *env)
@@ -274,7 +271,7 @@ static int 		handle_obj(t_env *env)
 	}
 	ft_bzero(env->obj_cpy, env->obj_size + env->page_offset + env->payload_size);
 	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
-	
+
 	// get .text content
 	if (parse_elf(env))
 	{
@@ -284,6 +281,7 @@ static int 		handle_obj(t_env *env)
 
 	printf("Original entrypoint: \t%08x\n", env->entrypoint);
 	printf("Inserted entrypoint: \t%08x\n", env->inject_addr);
+	printf("Inserted size: \t\t%08lx\n", env->payload_size);
 
 	// generate Key
 	if (generate_key(env))
@@ -298,11 +296,11 @@ static int 		handle_obj(t_env *env)
 	inject_code(env);
 
 	// encrypt .text
-	if (rabbit_encrypt(env, env->key))						//ENCRYPT
+	/*if (rabbit_encrypt(env, env->key))						//ENCRYPT
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}
+	}*/
 	
 	// save new obj
 	dump_obj(env);

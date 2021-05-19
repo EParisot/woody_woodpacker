@@ -3,7 +3,7 @@
 #define MSW(n) (n >> 8) << 8
 #define FG(a, b) LSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE)) ^ MSW(((a + b) % WORDSIZE) * ((a + b) % WORDSIZE))
 
-void _start()
+void injection()
 {
 	__asm__(
 	// save registers
@@ -138,7 +138,7 @@ void _start()
 		{
 			if (str_c + n < text_size)
 			{
-				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
+				//start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
 			}
 			else
 			{
@@ -184,8 +184,7 @@ void _start()
 		:: "c" (str)
 	);
 	
-	__asm__(
-	
+	__asm__(	
 	// restore used registers
 	"pop %r15 \n"	
 	"pop %r14 \n"
@@ -204,7 +203,6 @@ void _start()
 	"pop %rax \n"
 
 	// come back to initial stack position
-	//"add $0x8, %rsp \n" // with empty injection (no C code and no print)
 	//"add $0x28, %rsp \n"// with only print injection
 	"add $0x148, %rsp \n" // full injection
 
