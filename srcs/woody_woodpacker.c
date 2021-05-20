@@ -126,19 +126,20 @@ static int parse_elf(t_env *env)
 
 			// offset every segment after PT_LOAD
 			unsigned int added_size = (phdr[i].p_filesz + env->payload_size + env->payload_padd) - (phdr[i].p_filesz + env->text_padd);
-			if (ehdr->e_shoff > phdr[i+1].p_offset)
+			unsigned int pivot = phdr[i+1].p_offset;
+			if (ehdr->e_shoff >= pivot)
 			{
 				ehdr->e_shoff += added_size;
 				shdr = (Elf64_Shdr *)(env->obj_cpy + ehdr->e_shoff);
 			}
-			if (ehdr->e_phoff > phdr[i+1].p_offset)
+			if (ehdr->e_phoff >= pivot)
 			{
 				ehdr->e_phoff += added_size;
 				phdr = (Elf64_Phdr *)(env->obj_cpy + ehdr->e_phoff);
 			}
 			for (int k = 0; k < phnum; ++k)
 			{
-				if (phdr[k].p_offset >= phdr[i+1].p_offset)
+				if (phdr[k].p_offset >= pivot)
 				{
 					phdr[k].p_offset += added_size;
 					phdr[k].p_vaddr += added_size;
@@ -147,7 +148,7 @@ static int parse_elf(t_env *env)
 			}
 			for (int k = 0; k < shnum; ++k)
 			{
-				if (shdr[k].sh_offset >= phdr[i+1].p_offset)
+				if (shdr[k].sh_offset >= pivot)
 				{
 					shdr[k].sh_offset += added_size;
 					shdr[k].sh_addr += added_size;
