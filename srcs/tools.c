@@ -220,13 +220,26 @@ int 	check_corruption(void *obj, size_t size, char *obj_name)
 		return -1;
 	}
 	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
-
+	int prev_type = 0;
+	int load_found = 0;
+	unsigned int obj_base = 0;
 	for (int i = 0; i < phnum; ++i)
 	{
+		if (prev_type == PT_DYNAMIC && phdr[i].p_type == PT_LOAD && i+1 < phnum && phdr[i+1].p_type == PT_NOTE)
+		{
+			printf("It is likely that %s have already been infected with PT_LOAD following a PT_NOTE. \nExiting...\n", obj_name);
+			return -1;
+		}
 		if (phdr[i].p_type == 0)
 		{
 			printf("Corrupted p_type %d in %s. Exiting...\n", phdr[i].p_type, obj_name);
 			return -1;
+		}
+		// get base address
+		if (load_found == 0 && phdr[i].p_type == PT_LOAD)
+		{
+			obj_base = phdr[i].p_vaddr;
+			load_found = 1;
 		}
 		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5 && i + 1 < phnum)
 		{
@@ -256,6 +269,7 @@ int 	check_corruption(void *obj, size_t size, char *obj_name)
 				return -1;
 			}
 		}
+		prev_type = phdr[i].p_type;
 	}
 
 	for (int i = 0; i < shnum; ++i)
@@ -263,6 +277,11 @@ int 	check_corruption(void *obj, size_t size, char *obj_name)
 		if ((int)shdr[i].sh_name < 0 || sh_strtab->sh_offset + shdr[i].sh_name > size)
 		{
 			printf("Corrupted sh_name %d in %s. Exiting...\n", shdr[i].sh_name, obj_name);
+			return -1;
+		}
+		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".fini") && ehdr->e_entry - obj_base > shdr[i].sh_offset)
+		{
+			printf("It is likely that %s have already been infected in PT_LOAD code cave. \nExiting...\n", obj_name);
 			return -1;
 		}
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
