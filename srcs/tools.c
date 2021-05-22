@@ -12,7 +12,7 @@
 
 #include "../includes/woody_woodpacker.h"
 
-void 	clear_env(t_env *env)
+void clear_env(t_env *env)
 {
 	if (env->obj_cpy)
 		free(env->obj_cpy);
@@ -86,7 +86,7 @@ void print_key(t_env *env)
 	printf("\n");
 }
 
-int				print_err(char *err, char *arg)
+int print_err(char *err, char *arg)
 {
 	ft_putstr(err);
 	if (ft_strlen(arg))
@@ -99,14 +99,14 @@ int				print_err(char *err, char *arg)
 	return (1);
 }
 
-uint32_t		cpu_32(uint32_t n, uint8_t cpu)
+uint32_t cpu_32(uint32_t n, uint8_t cpu)
 {
 	if (cpu != 0)
 		return (ft_swap_32(n));
 	return (n);
 }
 
-uint64_t		cpu_64(uint64_t n, uint8_t cpu)
+uint64_t cpu_64(uint64_t n, uint8_t cpu)
 {
 	if (cpu != 0)
 		return (ft_swap_64(n));
@@ -148,7 +148,7 @@ void debug_phdr(Elf64_Phdr phdr, char *label)
 	printf("p_align: %02lx\n", phdr.p_align);
 }
 
-int 	check_corruption(void *obj, size_t size, char *obj_name)
+int check_corruption(void *obj, size_t size, char *obj_name)
 {
 	if (((char*)obj)[0] != 0x7f || \
 		((char*)obj)[1] != 'E' || \

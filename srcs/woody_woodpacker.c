@@ -160,7 +160,7 @@ static void get_bss_size(t_env *env)
 	}
 }
 
-static int 		handle_obj(t_env *env)
+static int handle_obj(t_env *env)
 {
 	build_payload(env);
 	get_bss_size(env);
@@ -212,7 +212,7 @@ static int 		handle_obj(t_env *env)
 	return 0;
 }
 
-static void 	woody_woodpacker(void *obj, size_t size)
+static void woody_woodpacker(void *obj, size_t size)
 {
 	t_env 	*env;
 
@@ -245,11 +245,11 @@ static void 	woody_woodpacker(void *obj, size_t size)
 	clear_env(env);
 }
 
-static void			read_obj(char *obj_name)
+static void	read_obj(char *obj_name)
 {
-	int				fd;
-	void			*obj;
-	size_t			size;
+	int	fd;
+	void *obj;
+	size_t size;
 
 	if ((fd = open(obj_name, O_RDONLY)) < 0)
 	{
