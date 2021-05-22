@@ -52,7 +52,7 @@ static int parse_elf(t_env *env)
 	
 	// get original entrypoint
 	env->entrypoint = ehdr->e_entry;
-
+	
 	int load_found = 0;
 	for (int i = 0; i < phnum; ++i)
 	{
@@ -61,7 +61,7 @@ static int parse_elf(t_env *env)
 		{
 			env->obj_base = phdr[i].p_vaddr;
 			// set the text address
-			env->text_addr = (char*)env->obj_cpy + env->entrypoint - env->obj_base;
+			env->text_addr = (char*)env->obj_cpy + (env->entrypoint - env->obj_base);
 			load_found = 1;
 		}
 		// find code cave in executable segment
@@ -79,7 +79,7 @@ static int parse_elf(t_env *env)
 			}
 			else 
 			{
-				printf("Not enought place in PT_LOAD, injecting at end of file...\n");
+				printf("Not enought place in PT_LOAD, injecting at end of file using PT_NOTE...\n");
 				// set the .text header rights too
 				env->inject_offset = env->page_offset;
 				env->inject_addr = env->inject_offset + env->obj_base;
@@ -94,7 +94,7 @@ static int parse_elf(t_env *env)
 				}
 			}
 			// set the size to encrypt from entrypoint
-			env->encrypt_size = fini - env->entrypoint;
+			env->encrypt_size = fini - (env->entrypoint - env->obj_base);
 			// set dist between .text end and inject point
 			env->inject_dist = env->inject_addr - env->entrypoint;
 		}
@@ -212,50 +212,37 @@ static int 		handle_obj(t_env *env)
 	return 0;
 }
 
-static void 	woody_woodpacker(void *obj, size_t size, char *obj_name)
+static void 	woody_woodpacker(void *obj, size_t size)
 {
-	char	hdr[6];
 	t_env 	*env;
 
-	ft_strncpy(hdr, obj, 6);
-	if (hdr[0] == 0x7f && \
-		hdr[1] == 'E' && \
-		hdr[2] == 'L' && \
-		hdr[3] == 'F' && \
-		hdr[4] == ELFCLASS64)
+	// create env
+	if ((env = (t_env *)malloc(sizeof(t_env))) == NULL)
 	{
-		// create env
-		if ((env = (t_env *)malloc(sizeof(t_env))) == NULL)
-		{
-			return;
-		}
-		env->obj = obj;
-		env->obj_cpy = NULL;
-		env->obj_size = size;
-		env->obj_base = 0;
-		env->payload_content = NULL;
-		env->payload_size = 0;
-		env->found_code_cave = 0;
-		env->encrypt_size = 0;
-		env->text_addr = NULL;
-		env->bss_offset = 0;
-		env->bss_size = 0;
-		env->entrypoint = 0;
-		env->inject_offset = 0;
-		env->inject_addr = 0;
-		env->inject_dist = 0;
-		env->page_offset = 0;
-		if (hdr[5] == 1)
-			env->cpu = 1;
-		else
-			env->cpu = 0;
-		handle_obj(env);
-		clear_env(env);
+		return;
 	}
+	env->obj = obj;
+	env->obj_cpy = NULL;
+	env->obj_size = size;
+	env->obj_base = 0;
+	env->payload_content = NULL;
+	env->payload_size = 0;
+	env->found_code_cave = 0;
+	env->encrypt_size = 0;
+	env->text_addr = NULL;
+	env->bss_offset = 0;
+	env->bss_size = 0;
+	env->entrypoint = 0;
+	env->inject_offset = 0;
+	env->inject_addr = 0;
+	env->inject_dist = 0;
+	env->page_offset = 0;
+	if (((char*)obj)[5] == 1)
+		env->cpu = 1;
 	else
-	{
-		printf("%s is not an ELF64. Exiting...\n", obj_name);
-	}
+		env->cpu = 0;
+	handle_obj(env);
+	clear_env(env);
 }
 
 static void			read_obj(char *obj_name)
@@ -284,7 +271,10 @@ static void			read_obj(char *obj_name)
 	else
 	{
 		close(fd);
-		woody_woodpacker(obj, size, obj_name);
+		if (check_corruption(obj, size, obj_name) == 0)
+		{
+			woody_woodpacker(obj, size);
+		}
 		if (munmap(obj, size) < 0)
 			print_err("Error munmap", "");
 	}

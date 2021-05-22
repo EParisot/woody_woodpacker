@@ -8,39 +8,76 @@ NC='\033[0m' # No Color
 
 make re
 
-printf "${YELLOW}* Sample32 ${NC}\n"
+printf "\n${RED}* Tests Classic: ${NC}\n"
+printf "\n${YELLOW}* Sample32 ${NC}\n"
 ./woody_woodpacker ressources/sample32
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 NO PIE ${NC}\n"
+printf "\n${YELLOW}* Sample64 NO PIE ${NC}\n"
 ./woody_woodpacker ressources/sample64_no_pie
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 PIE ${NC}\n"
+printf "\n${YELLOW}* Sample64 PIE ${NC}\n"
 ./woody_woodpacker ressources/sample64
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 STRIPPED ${NC}\n"
+printf "\n${YELLOW}* Sample64 STRIPPED ${NC}\n"
 ./woody_woodpacker ressources/sample64_stripped
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 with ARGS NO PIE ${NC}\n"
+printf "\n${YELLOW}* Sample64 with ARGS NO PIE ${NC}\n"
 ./woody_woodpacker ressources/sample_args_no_pie
-./woody test
+if [ -f "woody" ]; then
+	./woody test
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 with ARGS PIE ${NC}\n"
+printf "\n${YELLOW}* Sample64 with ARGS PIE ${NC}\n"
 ./woody_woodpacker ressources/sample_args
-./woody test
+if [ -f "woody" ]; then
+	./woody test
+	rm -f woody
+fi
 
-printf "${YELLOW}* Sample64 with ARGS STRIPPED ${NC}\n"
+printf "\n${YELLOW}* Sample64 with ARGS STRIPPED ${NC}\n"
 ./woody_woodpacker ressources/sample_args_stripped
-./woody test
+if [ -f "woody" ]; then
+	./woody test
+	rm -f woody
+fi
 
-printf "${YELLOW}* /usr/bin/date ${NC}\n"
+printf "\n${YELLOW}* /usr/bin/date ${NC}\n"
 ./woody_woodpacker /usr/bin/date
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
-printf "${YELLOW}* /usr/bin/ls ${NC}\n"
+printf "\n${YELLOW}* /usr/bin/ls ${NC}\n"
 ./woody_woodpacker /usr/bin/ls
-./woody
+if [ -f "woody" ]; then
+	./woody
+	rm -f woody
+fi
 
+printf "\n${RED}* Tests Corrupted: ${NC}\n"
+for file in "corrupted"/*; do
+	printf "\n${YELLOW}* $file ${NC}\n"
+	./woody_woodpacker $file
+	if [ -f "woody" ]; then
+		./woody
+		rm -f woody
+	fi
+done

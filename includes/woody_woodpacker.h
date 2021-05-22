@@ -56,6 +56,8 @@ int				print_err(char *err, char *arg);
 uint64_t		cpu_64(uint64_t n, u_int8_t cpu);
 uint32_t		cpu_32(uint32_t n, u_int8_t cpu);
 
+int 			check_corruption(void *obj, size_t size, char *obj_name);
+
 void 			debug_dump(t_env *env, unsigned int *content, unsigned int start_addr, size_t size);
 void 			debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p);
 void 			debug_phdr(Elf64_Phdr phdr, char *label);

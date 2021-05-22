@@ -141,8 +141,148 @@ void debug_phdr(Elf64_Phdr phdr, char *label)
 	printf("\nDEBUG: %s PHdr\n", label);
 	printf("p_offset: %08lx\n", phdr.p_offset);
 	printf("p_vaddr: %08lx\n", phdr.p_vaddr);
+	printf("p_paddr: %08lx\n", phdr.p_paddr);
 	printf("p_filesz: %08lx\n", phdr.p_filesz);
 	printf("p_memsz: %08lx\n", phdr.p_memsz);
 	printf("p_flags: %04x\n", phdr.p_flags);
 	printf("p_align: %02lx\n", phdr.p_align);
+}
+
+int 	check_corruption(void *obj, size_t size, char *obj_name)
+{
+	if (((char*)obj)[0] != 0x7f || \
+		((char*)obj)[1] != 'E' || \
+		((char*)obj)[2] != 'L' || \
+		((char*)obj)[3] != 'F' || \
+		((char*)obj)[4] != ELFCLASS64)
+	{
+		printf("%s is not an ELF64. Exiting...\n", obj_name);
+		return -1;
+	}
+	// get obj header
+	Elf64_Ehdr *ehdr = (Elf64_Ehdr *)obj;
+	// get pheader number
+	int phnum = ehdr->e_phnum;
+	// get first p_header
+	Elf64_Phdr *phdr = (Elf64_Phdr *)(obj + ehdr->e_phoff);
+	if (ehdr->e_type > 3)
+	{
+		printf("Corrupted e_type %d in %s. Exiting...\n", ehdr->e_type, obj_name);
+		return -1;
+	}
+	if (ehdr->e_ehsize >= 65535 || ehdr->e_ehsize <= 0)
+	{
+		printf("Corrupted ehsize %d in %s. Exiting...\n", ehdr->e_ehsize, obj_name);
+		return -1;
+	}
+	if (ehdr->e_phoff != ehdr->e_ehsize)
+	{
+		printf("Corrupted e_phoff %ld in %s. Exiting...\n", ehdr->e_phoff, obj_name);
+		return -1;
+	}
+	if (phnum >= 65535 || phnum <= 0)
+	{
+		printf("Corrupted phnum %d in %s. Exiting...\n", ehdr->e_phnum, obj_name);
+		return -1;
+	}
+	if (ehdr->e_phentsize >= 65535 || ehdr->e_phentsize <= 0)
+	{
+		printf("Corrupted phentsize %d in %s. Exiting...\n", ehdr->e_phentsize, obj_name);
+		return -1;
+	}
+	if (ehdr->e_shentsize >= 65535 || ehdr->e_shentsize <= 0)
+	{
+		printf("Corrupted shentsize %d in %s. Exiting...\n", ehdr->e_shentsize, obj_name);
+		return -1;
+	}
+	if (ehdr->e_shstrndx >= 65535 || ehdr->e_shstrndx <= 0)
+	{
+		printf("Corrupted shstrndx %d in %s. Exiting...\n", ehdr->e_shstrndx, obj_name);
+		return -1;
+	}
+	
+	// get sections number
+	int shnum = ehdr->e_shnum;
+	// get first section header
+	Elf64_Shdr *shdr = (Elf64_Shdr *)(obj + ehdr->e_shoff);
+
+	if (shnum >= 65535 || shnum <= 0)
+	{
+		printf("Corrupted shnum %d in %s. Exiting...\n", ehdr->e_shnum, obj_name);
+		return -1;
+	}
+	
+	// get str table
+	Elf64_Shdr *sh_strtab = &shdr[ehdr->e_shstrndx];
+	if (sh_strtab->sh_offset >= size || sh_strtab->sh_offset <= 0)
+	{
+		printf("Corrupted shstrtab_offset %ld in %s. Exiting...\n", sh_strtab->sh_offset, obj_name);
+		return -1;
+	}
+	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
+
+	for (int i = 0; i < phnum; ++i)
+	{
+		if (phdr[i].p_type == 0)
+		{
+			printf("Corrupted p_type %d in %s. Exiting...\n", phdr[i].p_type, obj_name);
+			return -1;
+		}
+		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5 && i + 1 < phnum)
+		{
+			if (phdr[i].p_filesz >= 0xffffffffffffffff || (int)phdr[i].p_filesz <= 0)
+			{
+				printf("Corrupted p_filesz %ld in %s. Exiting...\n", phdr[i].p_filesz, obj_name);
+				return -1;
+			}
+			if (phdr[i].p_memsz >= 0xffffffffffffffff || (int)phdr[i].p_memsz <= 0)
+			{
+				printf("Corrupted p_memsz %ld in %s. Exiting...\n", phdr[i].p_memsz, obj_name);
+				return -1;
+			}
+			if (phdr[i].p_offset >= 0xffffffffffffffff)
+			{
+				printf("Corrupted p_offset %ld in %s. Exiting...\n", phdr[i].p_offset, obj_name);
+				return -1;
+			}
+			if (phdr[i].p_paddr >= 0xffffffffffffffff)
+			{
+				printf("Corrupted p_paddr %ld in %s. Exiting...\n", phdr[i].p_paddr, obj_name);
+				return -1;
+			}
+			if (phdr[i].p_vaddr >= 0xffffffffffffffff)
+			{
+				printf("Corrupted p_vaddr %ld in %s. Exiting...\n", phdr[i].p_vaddr, obj_name);
+				return -1;
+			}
+		}
+	}
+
+	for (int i = 0; i < shnum; ++i)
+	{
+		if ((int)shdr[i].sh_name < 0 || sh_strtab->sh_offset + shdr[i].sh_name > size)
+		{
+			printf("Corrupted sh_name %d in %s. Exiting...\n", shdr[i].sh_name, obj_name);
+			return -1;
+		}
+		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
+		{
+			if (shdr[i].sh_addr >= 0xffffffffffffffff || shdr[i].sh_addr <= 0)
+			{
+				printf("Corrupted sh_addr %ld in %s. Exiting...\n", shdr[i].sh_addr, obj_name);
+				return -1;
+			}
+			if (shdr[i].sh_offset >= 0xffffffffffffffff || shdr[i].sh_offset <= 0)
+			{
+				printf("Corrupted sh_offset %ld in %s. Exiting...\n", shdr[i].sh_offset, obj_name);
+				return -1;
+			}
+			if (shdr[i].sh_size >= 0xffffffffffffffff || shdr[i].sh_size <= 0)
+			{
+				printf("Corrupted sh_size %ld in %s. Exiting...\n", shdr[i].sh_size, obj_name);
+				return -1;
+			}
+		}
+	}
+	return 0;
 }
