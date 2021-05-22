@@ -12,6 +12,80 @@
 
 #include "../includes/woody_woodpacker.h"
 
+void 	clear_env(t_env *env)
+{
+	if (env->obj_cpy)
+		free(env->obj_cpy);
+	if (env->payload_content)
+		free(env->payload_content);
+	free(env);
+}
+
+int dump_obj(t_env *env)
+{
+	int fd;
+
+	if ((fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
+	{
+		printf("Error %d creating 'woody' file.\n", fd);
+		return (-1);
+	}
+	write(fd, env->obj_cpy, (env->found_code_cave) ? env->obj_size : env->page_offset + env->payload_size);
+	close(fd);
+	return (0);
+}
+
+unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int replace)
+{
+	size_t i = 0;
+	int j = 0;
+
+	for (i = 0; i < env->payload_size; ++i)
+	{
+		if (i * 8 < env->payload_size)
+		{
+			int found = 0;
+			for (j = 0; j < 8; ++j)
+			{
+				if (i * 8 + j + 4 < env->payload_size && *(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) == needle)
+				{
+					found = 1;
+					break;
+				}
+			}
+			if (found)
+			{
+				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = replace;
+				break;
+
+			}
+		}
+	}
+	return (i * 8 + j);
+}
+
+int generate_key(t_env *env)
+{
+	int fd = 0;
+
+	if ((fd = open("/dev/urandom", O_RDONLY)) < 0)
+		return 1;
+	if (read(fd, env->key, 16) < 0)
+		return 1;
+	env->key[16] = 0;
+	return 0;
+}
+
+void print_key(t_env *env)
+{
+	printf("key_value: ");
+	for (size_t i = 0; i < 16; ++i)
+	{
+		printf("%02x", env->key[i]);
+	}
+	printf("\n");
+}
+
 int				print_err(char *err, char *arg)
 {
 	ft_putstr(err);

@@ -115,7 +115,7 @@ int rabbit_encrypt(t_env *env, unsigned char *key)
 		int i = 0;
 		for (i = 0; i < 16; ++i)
 		{
-			if (str_c + i < (int)env->text_size)
+			if (str_c + i < (int)env->encrypt_size)
 			{
 				env->text_addr[str_c + i] ^= ((char*)S)[i];
 			}

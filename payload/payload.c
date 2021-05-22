@@ -31,7 +31,7 @@ void injection()
 		: "=p" (start)
 	);
 	// .text len to be replaced
-	int text_size = 0x40404040;	
+	int encrypt_size = 0x40404040;	
 	// key to be replaced				
 	char key[16] = "AAAAAAAAAAAAAAAA";			
 
@@ -136,9 +136,10 @@ void injection()
 		int n = 0;
 		for (n = 0; n < 16; ++n)
 		{
-			if (str_c + n < text_size)
+			if (str_c + n < encrypt_size)
 			{
-				//start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
+				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
+				//start[str_c + n] = start[str_c + n];
 			}
 			else
 			{
