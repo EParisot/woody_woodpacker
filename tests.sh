@@ -66,16 +66,16 @@ if [ -f "woody" ]; then
 	rm -f woody
 fi
 
-printf "\n${YELLOW}* ./woody_woodpacker /usr/bin/date ${NC}\n"
-./woody_woodpacker /usr/bin/date
+printf "\n${YELLOW}* ./woody_woodpacker /bin/date ${NC}\n"
+./woody_woodpacker /bin/date
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
 	./woody
 	rm -f woody
 fi
 
-printf "\n${YELLOW}* ./woody_woodpacker /usr/bin/ls ${NC}\n"
-./woody_woodpacker /usr/bin/ls
+printf "\n${YELLOW}* ./woody_woodpacker /bin/ls ${NC}\n"
+./woody_woodpacker /bin/ls
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
 	./woody
