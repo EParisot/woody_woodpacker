@@ -25,7 +25,7 @@ int dump_obj(t_env *env)
 {
 	int fd;
 
-	if ((fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
+	if ((fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0755)) < 0)
 	{
 		printf("Error %d creating 'woody' file.\n", fd);
 		return (-1);
