@@ -47,6 +47,7 @@ typedef struct s_env
 	size_t 			encrypt_size;
 	unsigned int 	bss_offset;
 	size_t 			bss_size;
+	size_t 			load_align;
 	int   			found_code_cave;
 	u_int8_t 		cpu;
 }				t_env;

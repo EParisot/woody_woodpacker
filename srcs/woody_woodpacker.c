@@ -60,6 +60,7 @@ static int parse_elf(t_env *env)
 		if (load_found == 0 && phdr[i].p_type == PT_LOAD)
 		{
 			env->obj_base = phdr[i].p_vaddr;
+			env->load_align = phdr[i].p_align;
 			// set the text address
 			env->text_addr = (char*)env->obj_cpy + (env->entrypoint - env->obj_base);
 			load_found = 1;
@@ -109,7 +110,7 @@ static int parse_elf(t_env *env)
 			phdr[i].p_filesz = env->payload_size;
 			phdr[i].p_memsz = env->payload_size;
 			phdr[i].p_flags = PF_R | PF_W | PF_X;
-			phdr[i].p_align = 0x1000;
+			phdr[i].p_align = env->load_align;
 			break;
 		}
 	}
@@ -232,6 +233,7 @@ static void woody_woodpacker(void *obj, size_t size)
 	env->text_addr = NULL;
 	env->bss_offset = 0;
 	env->bss_size = 0;
+	env->load_align = 0;
 	env->entrypoint = 0;
 	env->inject_offset = 0;
 	env->inject_addr = 0;

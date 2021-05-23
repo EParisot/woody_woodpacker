@@ -225,7 +225,7 @@ int check_corruption(void *obj, size_t size, char *obj_name)
 	unsigned int obj_base = 0;
 	for (int i = 0; i < phnum; ++i)
 	{
-		if (prev_type == PT_DYNAMIC && phdr[i].p_type == PT_LOAD && i+1 < phnum && phdr[i+1].p_type == PT_NOTE)
+		if (prev_type == PT_DYNAMIC && phdr[i].p_type == PT_LOAD)
 		{
 			printf("It is likely that %s have already been infected with PT_LOAD following a PT_NOTE. \nExiting...\n", obj_name);
 			return -1;
