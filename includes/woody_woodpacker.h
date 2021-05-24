@@ -28,6 +28,10 @@
 #define PAYLOAD_SRC "payload/payload"
 #define WORDSIZE 0x100000000
 
+#define GCC90_OFFSET 0x38 // GCC 9.0 - LD 2.3
+#define GCC93_OFFSET 0x3c // GCC 9.3 - LD 2.34
+#define GCC_OFFSET GCC90_OFFSET
+
 
 typedef struct s_env
 {
@@ -37,6 +41,7 @@ typedef struct s_env
 	unsigned int	obj_base;
 	unsigned int	*payload_content;
 	size_t 			payload_size;
+	size_t          payload_rodata_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
 	int 		  	inject_dist;

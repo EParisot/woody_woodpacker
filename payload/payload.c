@@ -139,7 +139,7 @@ void injection()
 			if (str_c + n < encrypt_size)
 			{
 				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
-				//start[str_c + n] = start[str_c + n];
+				//start[str_c + n] = 0;
 			}
 			else
 			{
