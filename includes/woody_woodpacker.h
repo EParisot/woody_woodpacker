@@ -28,6 +28,10 @@
 #define PAYLOAD_SRC "payload/payload"
 #define WORDSIZE 0x100000000
 
+#define GCC90_OFFSET 0x38
+#define GCC93_OFFSET 0x3c
+#define GCC_OFFSET GCC93_OFFSET
+
 
 typedef struct s_env
 {
