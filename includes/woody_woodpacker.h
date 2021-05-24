@@ -37,6 +37,7 @@ typedef struct s_env
 	unsigned int	obj_base;
 	unsigned int	*payload_content;
 	size_t 			payload_size;
+	size_t          payload_rodata_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
 	int 		  	inject_dist;

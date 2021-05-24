@@ -28,7 +28,7 @@ static void inject_code(t_env *env)
 	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
 	
 	// replace jmp addr in payload
-	replace_addr(env, 0x42424242, -env->inject_dist - env->payload_size + 0x17);
+	replace_addr(env, 0x42424242, -env->inject_dist - env->payload_size + 0x17 + env->payload_rodata_size);
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);
@@ -201,11 +201,11 @@ static int handle_obj(t_env *env)
 	inject_code(env);
 
 	// encrypt .text
-	if (rabbit_encrypt(env, env->key))						//ENCRYPT
+	/*if (rabbit_encrypt(env, env->key))						//ENCRYPT
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}
+	}*/
 	
 	// save new obj
 	dump_obj(env);
@@ -228,6 +228,7 @@ static void woody_woodpacker(void *obj, size_t size)
 	env->obj_base = 0;
 	env->payload_content = NULL;
 	env->payload_size = 0;
+	env->payload_rodata_size = 0;
 	env->found_code_cave = 0;
 	env->encrypt_size = 0;
 	env->text_addr = NULL;
