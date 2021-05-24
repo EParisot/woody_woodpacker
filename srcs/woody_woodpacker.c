@@ -18,7 +18,7 @@ static void inject_code(t_env *env)
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
 	// replace start addr in payload (this is a negative offset)
-	replace_addr(env, 0x39393939, -env->inject_dist - 0x3c);
+	replace_addr(env, 0x39393939, -(env->inject_dist + 0x38));
 	// replace encrypt size in payload
 	replace_addr(env, 0x40404040, (int)env->encrypt_size);
 	// replace key addr in payload
@@ -201,11 +201,11 @@ static int handle_obj(t_env *env)
 	inject_code(env);
 
 	// encrypt .text
-	/*if (rabbit_encrypt(env, env->key))						//ENCRYPT
+	if (rabbit_encrypt(env, env->key))						//ENCRYPT
 	{
 		printf("Error encrypting elf.\n");
 		return 1;
-	}*/
+	}
 	
 	// save new obj
 	dump_obj(env);
