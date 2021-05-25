@@ -180,7 +180,7 @@ void injection()
 		"mov $1, %%rax \n"       	//write(
 		"mov $1, %%rdi \n"       	//  STDOUT_FILENO,
 		"mov %0, %%rsi \n"     	 	//  buf,
-		"mov $16, %%rdx \n"   		//  strlen(buf)
+		"mov $15, %%rdx \n"   		//  strlen(buf)
 		"syscall \n"        	 	//);
 		:: "c" (str)
 	);
