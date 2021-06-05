@@ -167,14 +167,17 @@ static int handle_obj(t_env *env)
 	get_bss_size(env);
 	// inject after .bss
 	env->page_offset = env->obj_base + env->bss_offset + env->bss_size;
-
+	if (env->page_offset + env->payload_size > env->obj_size)
+	{
+		env->new_obj_size = env->page_offset + env->payload_size;
+	}
 	// copy original file
-	if ((env->obj_cpy = malloc(env->page_offset + env->payload_size)) == NULL)
+	if ((env->obj_cpy = malloc(env->new_obj_size)) == NULL)
 	{
 		printf("Error: can't duplicate file.\n");
 		return 1;
 	}
-	ft_bzero(env->obj_cpy, env->page_offset + env->payload_size);
+	ft_bzero(env->obj_cpy, env->new_obj_size);
 	ft_memcpy(env->obj_cpy, env->obj, env->obj_size);
 
 	// get .text content
@@ -225,6 +228,7 @@ static void woody_woodpacker(void *obj, size_t size)
 	env->obj = obj;
 	env->obj_cpy = NULL;
 	env->obj_size = size;
+	env->new_obj_size = size;
 	env->obj_base = 0;
 	env->payload_content = NULL;
 	env->payload_size = 0;

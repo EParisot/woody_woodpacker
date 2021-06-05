@@ -38,6 +38,7 @@ typedef struct s_env
 	void 			*obj;
 	void 			*obj_cpy;
 	unsigned int	obj_size;
+	unsigned int	new_obj_size;
 	unsigned int	obj_base;
 	unsigned int	*payload_content;
 	size_t 			payload_size;
