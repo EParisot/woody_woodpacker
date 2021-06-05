@@ -139,7 +139,7 @@ void injection()
 			if (str_c + n < encrypt_size)
 			{
 				start[str_c + n] ^= ((char*)S)[n];						// DECRYPT
-				//start[str_c + n] = start[str_c + n];
+				//start[str_c + n] = 0;
 			}
 			else
 			{
@@ -180,7 +180,7 @@ void injection()
 		"mov $1, %%rax \n"       	//write(
 		"mov $1, %%rdi \n"       	//  STDOUT_FILENO,
 		"mov %0, %%rsi \n"     	 	//  buf,
-		"mov $16, %%rdx \n"   		//  strlen(buf)
+		"mov $15, %%rdx \n"   		//  strlen(buf)
 		"syscall \n"        	 	//);
 		:: "c" (str)
 	);*/
@@ -205,7 +205,7 @@ void injection()
 
 	// come back to initial stack position
 	//"add $0x28, %rsp \n"// with only print injection
-	//"add $0x148, %rsp \n" // full injection
+	//"add $0x148, %rsp \n" // full injection + print
 	"add $0x138, %rsp \n" // full injection without print
 
 	// jump back to entrypoint to be replaced (needs to be relative too => RIP + 5 (sizeof jmp))

@@ -17,7 +17,7 @@
 # include "../libft/libft.h"
 # include <unistd.h>
 # include <stdlib.h>
-#include <stdio.h>
+# include <stdio.h>
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
@@ -27,6 +27,10 @@
 
 #define PAYLOAD_SRC "payload/payload"
 #define WORDSIZE 0x100000000
+
+#define LD230_OFFSET 0x38 // LD 2.30
+#define LD234_OFFSET 0x3c // LD 2.34
+#define LD_OFFSET LD234_OFFSET
 
 
 typedef struct s_env
@@ -38,6 +42,7 @@ typedef struct s_env
 	unsigned int	obj_base;
 	unsigned int	*payload_content;
 	size_t 			payload_size;
+	size_t          payload_rodata_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
 	int 		  	inject_dist;
