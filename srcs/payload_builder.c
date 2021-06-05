@@ -24,29 +24,21 @@ int 		get_payload(t_env *env, void *obj)
 	Elf64_Shdr *sh_strtab = &shdr[ehdr->e_shstrndx];
 	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
 
-	unsigned int start_offset = 0;
-
 	for (int i = 0; i < shnum; ++i)
 	{
 		// get .text section
 		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
 		{
 			env->payload_size = shdr[i].sh_size;
-			start_offset = shdr[i].sh_offset;		
-		}
-		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".rodata"))
-		{
-			env->payload_size += shdr[i].sh_size;
-			env->payload_rodata_size = shdr[i].sh_size;
+
+			if ((env->payload_content = malloc(env->payload_size)) == NULL)
+				return 1;
+			ft_bzero(env->payload_content, env->payload_size);
+			ft_memcpy(env->payload_content, obj + shdr[i].sh_offset, env->payload_size);
+			//printf("DEBUG payload:");
+			//debug_dump(env, env->payload_content, ehdr->e_entry, env->payload_size);
 		}
   	}
-
-	if ((env->payload_content = malloc(env->payload_size)) == NULL)
-		return 1;
-	ft_bzero(env->payload_content, env->payload_size);
-	ft_memcpy(env->payload_content, obj + start_offset, env->payload_size);
-	//printf("DEBUG payload:");
-	//debug_dump(env, env->payload_content, ehdr->e_entry, env->payload_size);
 	return 0;
 }
 
