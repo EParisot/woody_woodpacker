@@ -175,7 +175,7 @@ void injection()
 	}
 
 	// print "....WOODY....\n\0"
-	/*char str[16] = "....WOODY....\n\0";
+	char str[16] = "....WOODY....\n\0";
 	__asm__(
 		"mov $1, %%rax \n"       	//write(
 		"mov $1, %%rdi \n"       	//  STDOUT_FILENO,
@@ -183,7 +183,7 @@ void injection()
 		"mov $15, %%rdx \n"   		//  strlen(buf)
 		"syscall \n"        	 	//);
 		:: "c" (str)
-	);*/
+	);
 	
 	__asm__(	
 	// restore used registers
@@ -205,8 +205,8 @@ void injection()
 
 	// come back to initial stack position
 	//"add $0x28, %rsp \n"// with only print injection
-	//"add $0x148, %rsp \n" // full injection + print
-	"add $0x138, %rsp \n" // full injection without print
+	"add $0x148, %rsp \n" // full injection + print
+	//"add $0x138, %rsp \n" // full injection without print
 
 	// jump back to entrypoint to be replaced (needs to be relative too => RIP + 5 (sizeof jmp))
 	"jmp . + 5 + 0x42424242 \n"

@@ -35,7 +35,7 @@ int dump_obj(t_env *env)
 	return (0);
 }
 
-unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int replace)
+unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int replace, int offset)
 {
 	size_t i = 0;
 	int j = 0;
@@ -55,6 +55,8 @@ unsigned int replace_addr(t_env *env, unsigned int needle, unsigned int replace)
 			}
 			if (found)
 			{
+				if (offset == 1) // take current position in account
+					replace -= (i * 8 + j);
 				*(unsigned int *)(&((unsigned char *)(&((long unsigned int *)env->payload_content)[i]))[j]) = replace;
 				break;
 
@@ -274,6 +276,16 @@ int check_corruption(void *obj, size_t size, char *obj_name)
 
 	for (int i = 0; i < shnum; ++i)
 	{
+		char c = -1;
+		int ic = -1;
+		while (c) {
+			ic++;
+			c = sh_strtab_p[shdr[i].sh_name + ic];
+		}
+		if (i > 0 && ic == 0) {
+			printf("Corrupted sh_name %d in %s. Exiting...\n", shdr[i].sh_name, obj_name);
+			return -1;
+		}
 		if ((int)shdr[i].sh_name < 0 || sh_strtab->sh_offset + shdr[i].sh_name > size)
 		{
 			printf("Corrupted sh_name %d in %s. Exiting...\n", shdr[i].sh_name, obj_name);

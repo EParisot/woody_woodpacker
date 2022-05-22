@@ -18,17 +18,17 @@ static void inject_code(t_env *env)
 	((Elf64_Ehdr *)env->obj_cpy)->e_entry = env->inject_addr; // new entrybpoint + base addr
 
 	// replace start addr in payload (this is a negative offset)
-	replace_addr(env, 0x39393939, -(env->inject_dist + LD_OFFSET));
+	replace_addr(env, 0x39393939, -(env->inject_dist + LD_OFFSET), 0);
 	// replace encrypt size in payload
-	replace_addr(env, 0x40404040, (int)env->encrypt_size);
+	replace_addr(env, 0x40404040, (int)env->encrypt_size, 0);
 	// replace key addr in payload
-	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32);
-	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32);
-	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32);
-	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32, 0);
+	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32, 0);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8) << 32) >> 32, 0);
+	replace_addr(env, 0x41414141, (*(long unsigned int*)(env->key+8)) >> 32, 0);
 	
 	// replace jmp addr in payload
-	replace_addr(env, 0x42424242, -env->inject_dist - env->payload_size + 0x17 + env->payload_rodata_size);
+	replace_addr(env, 0x42424242, -env->inject_dist, 1);
 
 	// inject payload
 	ft_memmove(env->obj_cpy + env->inject_offset, env->payload_content, env->payload_size);

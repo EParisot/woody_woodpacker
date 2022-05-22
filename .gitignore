@@ -1,8 +1,8 @@
 woody
 woody_woodpacker
 payload/payload
-ressources/sample64
-ressources/sample_args
+
+.vscode/*
 
 # Prerequisites
 *.d

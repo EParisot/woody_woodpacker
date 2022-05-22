@@ -45,7 +45,7 @@ typedef struct s_env
 	size_t          payload_rodata_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
-	int 		  	inject_dist;
+	unsigned int 	inject_dist;
 	unsigned int 	entrypoint;
 	unsigned int    page_offset;
 	unsigned char	key[17];
@@ -76,7 +76,7 @@ int 			generate_key(t_env *env);
 void 			print_key(t_env *env);
 
 int 			dump_obj(t_env *env);
-unsigned int 	replace_addr(t_env *env, unsigned int needle, unsigned int replace);
+unsigned int 	replace_addr(t_env *env, unsigned int needle, unsigned int replace, int offset);
 
 void 			clear_env(t_env *env);
 

@@ -29,7 +29,7 @@ $(NAME)	:	$(SRCS) $(SRCS_ARGS)
 	gcc -m64 -s $(SRCS_ARGS) -o $(NAME)_args_stripped
 
 clean	:
-	$(RM) $(NAME)64
+	$(RM) $(NAME)32 $(NAME)64 $(NAME)_args $(NAME)64_no_pie $(NAME)_args_no_pie $(NAME)64_stripped $(NAME)_args_stripped
 
 re		: clean all
 
