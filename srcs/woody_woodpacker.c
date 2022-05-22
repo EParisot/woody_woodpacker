@@ -80,10 +80,10 @@ static int parse_elf(t_env *env)
 			}
 			else 
 			{
-				printf("Not enought place in PT_LOAD, injecting at end of file using PT_NOTE...\n");
-				// set the .text header rights too
+				printf("Not enought place in PT_LOAD, injecting at %x using PT_NOTE...\n", env->page_offset);
 				env->inject_offset = env->page_offset;
 				env->inject_addr = env->inject_offset + env->obj_base;
+				phdr[i].p_flags = PF_R | PF_W | PF_X;
 			}
 			unsigned int fini = 0;
 			for (int j = 0; j < shnum; ++j)
@@ -117,7 +117,7 @@ static int parse_elf(t_env *env)
 	{
 		for (int i = 0; i < shnum; ++i)
 		{
-			// get .note.ABI-tag shdr if no code_cave found (so it will become the new injected phdr)
+			// get .note.ABI-tag shdr if no code_cave found (so it will become the new injected shdr)
 			if (shdr[i].sh_type == SHT_NOTE && ft_strequ(sh_strtab_p + shdr[i].sh_name, ".note.ABI-tag"))
 			{
 				// set the new injected shdr
