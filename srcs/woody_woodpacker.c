@@ -84,7 +84,6 @@ static int parse_elf(t_env *env)
 				// set the .text header rights too
 				env->inject_offset = env->page_offset;
 				env->inject_addr = env->inject_offset + env->obj_base;
-				phdr[i].p_flags = PF_R | PF_W | PF_X;
 			}
 			unsigned int fini = 0;
 			for (int j = 0; j < shnum; ++j)
@@ -128,7 +127,7 @@ static int parse_elf(t_env *env)
 				shdr[i].sh_size = env->payload_size;
 				shdr[i].sh_flags = SHF_ALLOC | SHF_EXECINSTR;
 				shdr[i].sh_addralign = 16;
-				continue;
+				break;
 			}
 		}
 	}
