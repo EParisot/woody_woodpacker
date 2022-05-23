@@ -57,18 +57,18 @@ int 		get_payload(t_env *env, void *obj)
 			env->payload_size += shdr[i].sh_size;
 			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
 				start_offset = shdr[i].sh_offset;
-			printf("DEBUG PAYLOAD: .text section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+			//printf("DEBUG PAYLOAD: .text section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
 		}
 		// get .rodata section
 		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".rodata") == 0) {
 			env->payload_size += shdr[i].sh_size;
-			printf("DEBUG PAYLOAD: .rodata section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+			//printf("DEBUG PAYLOAD: .rodata section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
 		}
-		// get got.plt sections
+		/*// get got.plt sections
 		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".got.plt") == 0) {
 			env->payload_size = (shdr[i].sh_offset + shdr[i].sh_size) - start_offset;
 			printf("DEBUG PAYLOAD: .got.plt section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
-		}
+		}*/
   	}
 	// save payload in env
 	if ((env->payload_content = malloc(env->payload_size + 1)) == NULL) {
