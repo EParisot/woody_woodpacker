@@ -25,12 +25,11 @@ int 		get_payload(t_env *env, void *obj)
 	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
 
 	unsigned int start_offset = 0;
-	unsigned int payload_rodata_end = 0;
 
 
 	for (int i = 0; i < shnum; ++i) {
-		/*// get plt sections
-		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".plt") == 0) {
+		// get plt sections
+		/*if (strcmp(sh_strtab_p + shdr[i].sh_name, ".plt") == 0) {
 			env->payload_size += shdr[i].sh_size;
 			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
 				start_offset = shdr[i].sh_offset;
@@ -63,26 +62,21 @@ int 		get_payload(t_env *env, void *obj)
 		// get .rodata section
 		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".rodata") == 0) {
 			env->payload_size += shdr[i].sh_size;
-			payload_rodata_end = shdr[i].sh_offset + shdr[i].sh_size;
-
 			printf("DEBUG PAYLOAD: .rodata section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
 		}
 		// get got.plt sections
-		/*if (strcmp(sh_strtab_p + shdr[i].sh_name, ".got.plt") == 0) {
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".got.plt") == 0) {
 			env->payload_size = (shdr[i].sh_offset + shdr[i].sh_size) - start_offset;
 			printf("DEBUG PAYLOAD: .got.plt section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
-		}*/
+		}
   	}
 	// save payload in env
-	if ((env->payload_content = malloc(env->payload_size)) == NULL) {
+	if ((env->payload_content = malloc(env->payload_size + 1)) == NULL) {
 		printf("DEBUG PAYLOAD: malloc failed\n");
 		return -1;
 	}
-	bzero(env->payload_content, env->payload_size);
-	memcpy(env->payload_content, obj + start_offset, env->payload_size);
-
-	// set the size to encrypt from entrypoint
-	env->encrypt_size = payload_rodata_end - (env->entrypoint - env->obj_base);
+	ft_bzero(env->payload_content, env->payload_size + 1);
+	ft_memcpy(env->payload_content, obj + start_offset, env->payload_size);
 
 	return 0;
 }

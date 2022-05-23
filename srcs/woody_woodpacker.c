@@ -19,11 +19,11 @@ static void inject_code(t_env *env)
 
 	// calc dist between original entry and the end and inject point
 	unsigned int inject_dist = env->inject_addr - env->entrypoint;
-
+	
 	// replace start addr in payload (this is a negative offset)
-	replace_addr(env, 0x39393939, -(inject_dist + LD_OFFSET), 0);
+	replace_addr(env, 0x39393939, -(inject_dist + 4), 1);
 	// replace encrypt size in payload
-	replace_addr(env, 0x40404040, (int)env->encrypt_size, 0);
+	replace_addr(env, 0x40404040, env->encrypt_size, 0);
 	// replace key addr in payload
 	replace_addr(env, 0x41414141, (*(long unsigned int*)env->key << 32) >> 32, 0);
 	replace_addr(env, 0x41414141, *(long unsigned int*)env->key >> 32, 0);
@@ -62,8 +62,6 @@ void find_injection_point(t_env *env) {
 		if (load_found == 0 && phdr[i].p_type == PT_LOAD) {
 			env->obj_base = phdr[i].p_vaddr;
 			env->load_align = phdr[i].p_align;
-			// set the text address
-			env->text_addr = (char*)env->obj + (env->entrypoint - env->obj_base);
 			load_found = 1;
 		}
 		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5 && i + 1 < phnum) {
@@ -98,6 +96,16 @@ void find_injection_point(t_env *env) {
 			}
 		}
 	}
+	unsigned int fini = 0;
+	for (int j = 0; j < shnum; ++j)
+	{
+		if (ft_strequ(sh_strtab_p + shdr[j].sh_name, ".fini"))
+		{
+			fini = shdr[j].sh_offset;
+		}
+	}
+	// set the size to encrypt from entrypoint
+	env->encrypt_size = fini - env->entrypoint;
 }
 
 void tweak_elf(t_env *env) {
@@ -115,6 +123,15 @@ void tweak_elf(t_env *env) {
 	Elf64_Shdr *sh_strtab = &shdr[ehdr->e_shstrndx];
 	const char *sh_strtab_p = env->obj_cpy + sh_strtab->sh_offset;
 
+	for (int i = 0; i < phnum; i++)
+	{
+		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5) {
+			// set the text address and set write rights to decrypt
+			env->text_addr = (char*)env->obj_cpy + (env->entrypoint - env->obj_base);
+			phdr[i].p_flags = PF_R | PF_W | PF_X;
+			break;
+		}
+	}
 	if (env->found_code_cave == 1) {
 		// patch the pheader
 		phdr[env->found_code_cave_id].p_filesz += env->payload_size;
@@ -181,11 +198,13 @@ static int handle_obj(t_env *env)
 	//ft_memcpy(env->key, "aaaabbbbccccdddd\0", 17);
 	print_key(env);	
 	inject_code(env);
+	//debug_dump(env, (unsigned int *)env->text_addr, env->entrypoint, env->encrypt_size);
 	// encrypt .text
 	if (rabbit_encrypt(env)) { // ENCRYPT
 		printf("Error encrypting elf.\n");
 		return -1;
 	}
+	//debug_dump(env, (unsigned int *)env->text_addr, env->entrypoint, env->encrypt_size);
 	// save new obj
 	if (dump_obj(env)) {
 		printf("Error dumping new object.\n");

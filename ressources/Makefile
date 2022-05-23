@@ -21,15 +21,18 @@ RM 		=	rm -rf
 all		:	$(NAME)
 
 $(NAME)	:	$(SRCS) $(SRCS_ARGS)
-	gcc -no-pie -m64 $(SRCS) -o $(NAME)64_no_pie
-	gcc -no-pie -m64 $(SRCS_ARGS) -o $(NAME)_args_no_pie
 	gcc -m64 $(SRCS) -o $(NAME)64
 	gcc -m64 $(SRCS_ARGS) -o $(NAME)_args
-	gcc -m64 -s $(SRCS) -o $(NAME)64_stripped
+	gcc -m64 -s $(SRCS) -o $(NAME)_stripped
 	gcc -m64 -s $(SRCS_ARGS) -o $(NAME)_args_stripped
+	gcc -no-pie -m64 $(SRCS) -o $(NAME)_no_pie
+	gcc -no-pie -m64 $(SRCS_ARGS) -o $(NAME)_args_no_pie
+	gcc -no-pie -m64 -s $(SRCS) -o $(NAME)_stripped_no_pie
+	gcc -no-pie -m64 -s $(SRCS_ARGS) -o $(NAME)_args_stripped_no_pie
+
 
 clean	:
-	$(RM) $(NAME)64 $(NAME)_args $(NAME)64_no_pie $(NAME)_args_no_pie $(NAME)64_stripped $(NAME)_args_stripped
+	$(RM) $(NAME)64 $(NAME)_args $(NAME)_no_pie $(NAME)_args_no_pie $(NAME)_stripped $(NAME)_args_stripped $(NAME)_stripped_no_pie $(NAME)_args_stripped_no_pie
 
 re		: clean all
 
