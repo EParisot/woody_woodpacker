@@ -14,7 +14,14 @@ printf "\n${YELLOW}* Sample32 ${NC}\n"
 ./woody_woodpacker ressources/sample32
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -22,7 +29,14 @@ printf "\n${YELLOW}* Sample64 NO PIE ${NC}\n"
 ./woody_woodpacker ressources/sample64_no_pie
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -30,7 +44,14 @@ printf "\n${YELLOW}* Sample64 PIE ${NC}\n"
 ./woody_woodpacker ressources/sample64
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -38,7 +59,14 @@ printf "\n${YELLOW}* Sample64 STRIPPED ${NC}\n"
 ./woody_woodpacker ressources/sample64_stripped
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -46,7 +74,14 @@ printf "\n${YELLOW}* Sample64 with ARGS NO PIE ${NC}\n"
 ./woody_woodpacker ressources/sample_args_no_pie
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody test
+	cmd=./woody test
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -54,7 +89,14 @@ printf "\n${YELLOW}* Sample64 with ARGS PIE ${NC}\n"
 ./woody_woodpacker ressources/sample_args
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody test
+	cmd=./woody test
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -62,7 +104,14 @@ printf "\n${YELLOW}* Sample64 with ARGS STRIPPED ${NC}\n"
 ./woody_woodpacker ressources/sample_args_stripped
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody test
+	cmd=./woody test
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -70,7 +119,14 @@ printf "\n${YELLOW}* ./woody_woodpacker /bin/date ${NC}\n"
 ./woody_woodpacker /bin/date
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....'; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -78,7 +134,14 @@ printf "\n${YELLOW}* ./woody_woodpacker /bin/ls ${NC}\n"
 ./woody_woodpacker /bin/ls
 if [ -f "woody" ]; then
 	printf "\n${BLUE}./woody [args]: ${NC}\n"
-	./woody
+	cmd=./woody
+	res=`$cmd | tr -d '\0'`
+	if echo "$res" | grep -q '....WOODY....' ; then
+		echo "$res"
+		printf "${GREEN}[OK]${NC}\n"
+	else
+		printf "${RED}[FAIL]${NC}\n"
+	fi
 	rm -f woody
 fi
 
@@ -89,6 +152,9 @@ for file in "corrupted"/*; do
 	if [ -f "woody" ]; then
 		printf "\n${BLUE}./woody [args]: ${NC}\n"
 		./woody
+		printf "${RED}[FAIL]${NC}\n"
 		rm -f woody
+	else
+		printf "${GREEN}[OK]${NC}\n"
 	fi
 done

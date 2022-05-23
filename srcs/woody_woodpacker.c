@@ -199,13 +199,15 @@ static int handle_obj(t_env *env)
 	return 0;
 }
 
-static void woody_woodpacker(void *obj, size_t size)
+static int woody_woodpacker(void *obj, size_t size)
 {
 	t_env 	*env;
+	int ret = 0;
 
 	// create env
 	if ((env = (t_env *)malloc(sizeof(t_env))) == NULL) {
-		return;
+		printf("Error: can't allocate memory.\n");
+		return -1;
 	}
 	env->obj = obj;
 	env->obj_cpy = NULL;
@@ -231,49 +233,62 @@ static void woody_woodpacker(void *obj, size_t size)
 	
 	if (handle_obj(env)) {
 		printf("Error handling object.\n");
+		ret = -1;
 	}
 	clear_env(env);
+	return ret;
 }
 
-static void	read_obj(char *obj_name)
+static int	read_obj(char *obj_name)
 {
 	int	fd;
 	void *obj;
 	size_t size;
+	int ret = 0;
 
 	if ((fd = open(obj_name, O_RDONLY)) < 0) {
 		print_err("Error openning file", obj_name);
-		return ;
+		return -1;
 	}
 	if ((size = lseek(fd, (size_t)0, SEEK_END)) <= 0) {
 		print_err("Error empty file", obj_name);
 		close(fd);
-		return ;
+		return -1;
 	}
 	if ((obj = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0)) == \
 			MAP_FAILED)
 	{
 		print_err("Error mapping file", obj_name);
 		close(fd);
+		return -1;
 	}
 	else {
 		close(fd);
 		if (check_corruption(obj, size, obj_name) == 0) {
-			woody_woodpacker(obj, size);
+			if (woody_woodpacker(obj, size)) {
+				ret = -1;
+			}
 		}
 		if (munmap(obj, size) < 0)
 			print_err("Error munmap", "");
 	}
+	return ret;
 }
 
 int main(int argc, char **argv)
 {
-	if (argc == 2)
-		read_obj(argv[1]);
-	else if (argc == 1)
-		read_obj("a.out\0");
+	if (argc == 2) {
+		if (read_obj(argv[1])) {
+			return -1;
+		}
+	}
+	else if (argc == 1) {
+		if (read_obj("a.out\0")) {
+			return -1;
+		}
+	}
 	else {
 		printf("Error: Too many args...\n");
 	}
-	return (0);
+	return 0;
 }
