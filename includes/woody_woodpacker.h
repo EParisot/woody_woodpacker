@@ -37,24 +37,21 @@ typedef struct s_env
 {
 	void 			*obj;
 	void 			*obj_cpy;
+	unsigned int	*payload_content;
+	char			*text_addr;
+	size_t 			payload_size;
+	size_t 			encrypt_size;
+	size_t 			load_align;
+	unsigned int	plt_offset;
 	unsigned int	obj_size;
 	unsigned int	new_obj_size;
 	unsigned int	obj_base;
-	unsigned int	*payload_content;
-	size_t 			payload_size;
-	size_t          payload_rodata_size;
 	unsigned int	inject_offset;
 	unsigned int    inject_addr;
-	unsigned int 	inject_dist;
 	unsigned int 	entrypoint;
-	unsigned int    page_offset;
 	unsigned char	key[17];
-	char			*text_addr;
-	size_t 			encrypt_size;
-	unsigned int 	bss_offset;
-	size_t 			bss_size;
-	size_t 			load_align;
 	int   			found_code_cave;
+	int   			found_code_cave_id;
 	u_int8_t 		cpu;
 }				t_env;
 
@@ -70,7 +67,7 @@ void 			debug_shdr(Elf64_Shdr shdr, char *label, const char *sh_strtab_p);
 void 			debug_phdr(Elf64_Phdr phdr, char *label);
 
 int 			build_payload(t_env *env);
-int 			rabbit_encrypt(t_env *env, unsigned char *key);
+int 			rabbit_encrypt(t_env *env);
 
 int 			generate_key(t_env *env);
 void 			print_key(t_env *env);

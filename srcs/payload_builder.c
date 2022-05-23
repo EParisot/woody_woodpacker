@@ -25,28 +25,65 @@ int 		get_payload(t_env *env, void *obj)
 	const char *sh_strtab_p = obj + sh_strtab->sh_offset;
 
 	unsigned int start_offset = 0;
+	unsigned int payload_rodata_end = 0;
 
-	for (int i = 0; i < shnum; ++i)
-	{
-		// get .text section
-		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".text"))
-		{
-			env->payload_size = shdr[i].sh_size;
-			start_offset = shdr[i].sh_offset;		
-		}
-		if (ft_strequ(sh_strtab_p + shdr[i].sh_name, ".rodata"))
-		{
+
+	for (int i = 0; i < shnum; ++i) {
+		/*// get plt sections
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".plt") == 0) {
 			env->payload_size += shdr[i].sh_size;
-			env->payload_rodata_size = shdr[i].sh_size;
+			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
+				start_offset = shdr[i].sh_offset;
+			env->plt_offset += shdr[i].sh_size;
+			printf("DEBUG PAYLOAD: .plt section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
 		}
-  	}
+		// get plt.got sections
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".plt.got") == 0) {
+			env->payload_size += shdr[i].sh_size;
+			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
+				start_offset = shdr[i].sh_offset;
+			env->plt_offset += shdr[i].sh_size;
+			printf("DEBUG PAYLOAD: .plt.got section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+		}
+		// get plt.sec sections
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".plt.sec") == 0) {
+			env->payload_size += shdr[i].sh_size;
+			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
+				start_offset = shdr[i].sh_offset;
+			env->plt_offset += shdr[i].sh_size;
+			printf("DEBUG PAYLOAD: .plt.sec section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+		}*/
+		// get .text section
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".text") == 0) {
+			env->payload_size += shdr[i].sh_size;
+			if (start_offset == 0 || start_offset > shdr[i].sh_offset)
+				start_offset = shdr[i].sh_offset;
+			printf("DEBUG PAYLOAD: .text section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+		}
+		// get .rodata section
+		if (strcmp(sh_strtab_p + shdr[i].sh_name, ".rodata") == 0) {
+			env->payload_size += shdr[i].sh_size;
+			payload_rodata_end = shdr[i].sh_offset + shdr[i].sh_size;
 
-	if ((env->payload_content = malloc(env->payload_size)) == NULL)
-		return 1;
-	ft_bzero(env->payload_content, env->payload_size);
-	ft_memcpy(env->payload_content, obj + start_offset, env->payload_size);
-	//printf("DEBUG payload:");
-	//debug_dump(env, env->payload_content, ehdr->e_entry, env->payload_size);
+			printf("DEBUG PAYLOAD: .rodata section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+		}
+		// get got.plt sections
+		/*if (strcmp(sh_strtab_p + shdr[i].sh_name, ".got.plt") == 0) {
+			env->payload_size = (shdr[i].sh_offset + shdr[i].sh_size) - start_offset;
+			printf("DEBUG PAYLOAD: .got.plt section found at offset %lx with size %lx\n", shdr[i].sh_offset, shdr[i].sh_size);
+		}*/
+  	}
+	// save payload in env
+	if ((env->payload_content = malloc(env->payload_size)) == NULL) {
+		printf("DEBUG PAYLOAD: malloc failed\n");
+		return -1;
+	}
+	bzero(env->payload_content, env->payload_size);
+	memcpy(env->payload_content, obj + start_offset, env->payload_size);
+
+	// set the size to encrypt from entrypoint
+	env->encrypt_size = payload_rodata_end - (env->entrypoint - env->obj_base);
+
 	return 0;
 }
 
@@ -60,13 +97,13 @@ static int		read_obj(t_env *env, char *obj_name)
 	if ((fd = open(obj_name, O_RDONLY)) < 0)
 	{
 		print_err("Error openning file", obj_name);
-		return 1;
+		return -1;
 	}
 	if ((size = lseek(fd, (size_t)0, SEEK_END)) <= 0)
 	{
 		print_err("Error empty file", obj_name);
 		close(fd);
-		return 1;
+		return -1;
 	}
 	if ((obj = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0)) == \
 			MAP_FAILED)

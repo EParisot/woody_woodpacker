@@ -43,7 +43,7 @@ static void rabbit_round(unsigned int *C, unsigned int *A, unsigned int *G, unsi
 	}
 }
 
-int rabbit_encrypt(t_env *env, unsigned char *key)
+int rabbit_encrypt(t_env *env)
 {
 	unsigned int 	X[8];
 	unsigned int 	C[8];
@@ -63,7 +63,7 @@ int rabbit_encrypt(t_env *env, unsigned char *key)
 	for (int i = 0; i < 16; ++i)
 	{
 		if (i % 2 == 0)
-			K[i/2] = (key[i] << 8) + key[i+1];
+			K[i/2] = (env->key[i] << 8) + env->key[i+1];
 	}
 
 	// Key Setup Scheme
