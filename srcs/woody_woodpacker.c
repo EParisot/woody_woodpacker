@@ -65,14 +65,14 @@ void find_injection_point(t_env *env) {
 			load_found = 1;
 		}
 		if (phdr[i].p_type == PT_LOAD && (phdr[i].p_flags & 5) == 5 && i + 1 < phnum) {
-			if (phdr[i+1].p_offset - (phdr[i].p_offset + phdr[i].p_memsz) > env->payload_size) {
-				printf("Found code cave in PT_LOAD at %lx\n", phdr[i].p_offset);
+			if (load_found && phdr[i+1].p_offset - (phdr[i].p_offset + phdr[i].p_memsz) > env->payload_size) {
+				printf("Found code cave in PT_LOAD at %lx\n", phdr[i].p_offset + phdr[i].p_memsz);
 				env->inject_offset = phdr[i].p_offset + phdr[i].p_memsz;
 				env->inject_addr = env->obj_base + env->inject_offset;
 				env->found_code_cave = 1;
 				env->found_code_cave_id = i;
 			}
-			else {
+			else if (load_found) {
 				printf("Not enought space in PT_LOAD, injecting after last section.\n");
 				
 				// parse sections
