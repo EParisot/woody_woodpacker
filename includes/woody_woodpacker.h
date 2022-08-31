@@ -28,11 +28,6 @@
 #define PAYLOAD_SRC "payload/payload"
 #define WORDSIZE 0x100000000
 
-#define LD230_OFFSET 0x38 // LD 2.30
-#define LD234_OFFSET 0x3c // LD 2.34
-#define LD_OFFSET LD234_OFFSET
-
-
 typedef struct s_env
 {
 	void 			*obj;
